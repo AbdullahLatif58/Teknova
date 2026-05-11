@@ -1,0 +1,15 @@
+{
+  "theme": "theme-1",
+  "variation": "variation-1",
+  "page": "home",
+  "sections": [
+    "hero",
+    "featuredcategories",
+    "productcarousel",
+    "promotionalbanner",
+    "testimonialslider",
+    "brandcarousel",
+    "newsletter",
+    "aisuggestions"
+  ]
+}

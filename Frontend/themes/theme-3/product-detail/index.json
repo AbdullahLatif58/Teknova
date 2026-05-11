@@ -1,0 +1,12 @@
+{
+  "theme": "theme-3",
+  "variation": "variation-3",
+  "page": "product-detail",
+  "sections": [
+    "imagegallery",
+    "productinfo",
+    "reviewsratings",
+    "relatedproducts",
+    "aisuggestions"
+  ]
+}

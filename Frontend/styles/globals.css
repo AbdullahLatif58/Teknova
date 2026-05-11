@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── THEME-1: Clean Minimal ── */
+:root, [data-theme="theme-1"] {
+  --background: 0 0% 98%; --foreground: 0 0% 9%;
+  --card: 0 0% 100%; --card-foreground: 0 0% 9%;
+  --primary: 0 0% 9%; --primary-foreground: 0 0% 98%;
+  --secondary: 0 0% 95%; --secondary-foreground: 0 0% 9%;
+  --muted: 0 0% 93%; --muted-foreground: 0 0% 45%;
+  --border: 0 0% 88%;
+  --destructive: 0 84% 60%; --destructive-foreground: 0 0% 98%;
+  --neon: 0 0% 9%; --neon-alt: 0 0% 30%; --teknova-dark: 0 0% 98%;
+  --font-heading: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+/* ── THEME-2: Cyberpunk Neon ── */
+[data-theme="theme-2"] {
+  --background: 240 10% 4%; --foreground: 0 0% 95%;
+  --card: 240 8% 7%; --card-foreground: 0 0% 95%;
+  --primary: 165 100% 50%; --primary-foreground: 240 10% 4%;
+  --secondary: 240 8% 10%; --secondary-foreground: 0 0% 95%;
+  --muted: 240 6% 14%; --muted-foreground: 0 0% 55%;
+  --border: 240 6% 16%;
+  --destructive: 0 84% 60%; --destructive-foreground: 0 0% 98%;
+  --neon: 165 100% 50%; --neon-alt: 270 100% 60%; --teknova-dark: 240 10% 4%;
+  --font-heading: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+/* ── THEME-3: Warm Luxury ── */
+[data-theme="theme-3"] {
+  --background: 30 20% 97%; --foreground: 24 10% 10%;
+  --card: 0 0% 100%; --card-foreground: 24 10% 10%;
+  --primary: 24 80% 45%; --primary-foreground: 0 0% 100%;
+  --secondary: 30 15% 92%; --secondary-foreground: 24 10% 10%;
+  --muted: 30 12% 88%; --muted-foreground: 24 8% 45%;
+  --border: 30 15% 82%;
+  --destructive: 0 84% 60%; --destructive-foreground: 0 0% 98%;
+  --neon: 24 80% 45%; --neon-alt: 45 90% 50%; --teknova-dark: 24 10% 10%;
+  --font-heading: 'Playfair Display', serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body), Inter, sans-serif;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.2s ease;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+[data-theme="theme-2"] .glow-neon { box-shadow: 0 0 20px hsl(165 100% 50% / 0.3); }
+[data-theme="theme-2"] .text-gradient-neon {
+  background: linear-gradient(135deg, hsl(165 100% 50%), hsl(270 100% 60%));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+[data-theme="theme-2"] .bg-gradient-neon {
+  background: linear-gradient(135deg, hsl(165 100% 50%), hsl(270 100% 60%));
+}
+[data-theme="theme-3"] .glow-warm { box-shadow: 0 8px 32px hsl(24 80% 45% / 0.15); }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up { animation: fadeInUp 0.5s ease forwards; }

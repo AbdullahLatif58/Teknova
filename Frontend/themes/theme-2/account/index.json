@@ -1,0 +1,8 @@
+{
+  "theme": "theme-2",
+  "variation": "variation-2",
+  "page": "account",
+  "sections": [
+    "accountdashboard"
+  ]
+}

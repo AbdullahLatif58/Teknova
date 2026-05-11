@@ -1,0 +1,9 @@
+{
+  "theme": "theme-1",
+  "variation": "variation-1",
+  "page": "products",
+  "sections": [
+    "filterssidebar",
+    "productgrid"
+  ]
+}
