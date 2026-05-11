@@ -17,10 +17,14 @@ const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY ?? "ee8504702amsh7d55b3cf878f605p1
 const RAPIDAPI_HOST = "real-time-amazon-data.p.rapidapi.com";
 const BASE_URL = `https://${RAPIDAPI_HOST}`;
 
-const DEFAULT_COUNTRY = "PK" as const;
+const DEFAULT_COUNTRY = "US" as const;
+const SUPPORTED_COUNTRIES = ["AE", "AU", "BE", "BR", "CA", "CN", "DE", "EG", "ES", "FR", "GB", "IE", "IN", "IT", "JP", "MX", "NL", "PL", "SA", "SE", "SG", "TR", "US", "ZA"];
+
 const MAX_PRODUCTS = 3;
 const REQUEST_TIMEOUT = 8_000;
-const CACHE_TTL = 5 * 60_000;
+const CACHE_TTL = 5 * 60_000;        // 5 min for successful results
+const RATE_LIMIT_TTL = 60 * 60_000; // 1 hour for rate-limit errors
+const RATE_LIMIT_SENTINEL = '__RATE_LIMITED__';
 
 const BASE_HEADERS = {
   "Content-Type": "application/json",
@@ -79,8 +83,10 @@ async function apiFetch<T>(url: string): Promise<T> {
     });
 
     if (!response.ok) {
-      const text = await response.text().catch(() => "No response body");
-      throw new Error(`RapidAPI ${response.status}: ${text}`);
+      const text = await response.text().catch(() => 'No response body');
+      const err = new Error(`RapidAPI ${response.status}: ${text}`);
+      (err as any).statusCode = response.status;
+      throw err;
     }
 
     return response.json() as Promise<T>;
@@ -100,12 +106,23 @@ async function apiFetch<T>(url: string): Promise<T> {
 export async function searchProducts(
   params: AmazonSearchParams
 ): Promise<ApiResponse<AmazonProduct[]>> {
-  const country = params.country ?? DEFAULT_COUNTRY;
+  let country = (params.country ?? DEFAULT_COUNTRY).toUpperCase();
+  
+  // Fallback to US if requested country is not supported (e.g., PK)
+  if (!SUPPORTED_COUNTRIES.includes(country)) {
+    console.warn(`[AMAZON] Requested country "${country}" is not supported. Falling back to "${DEFAULT_COUNTRY}".`);
+    country = DEFAULT_COUNTRY;
+  }
+
   const cacheKey = `search::${params.query.toLowerCase().trim()}::${country}`;
 
 
   const cached = getCached<AmazonProduct[]>(cacheKey);
   if (cached) {
+    if ((cached as any) === RATE_LIMIT_SENTINEL) {
+      console.warn(`[AMAZON] Rate-limited cache hit for "${params.query}". Skipping API call.`);
+      return { success: false, error: 'Rate limited', details: 'API quota exceeded. Try again later.' };
+    }
     console.log(`[CACHE HIT] "${params.query}" (${country})`);
     return { success: true, country, total: cached.length, page: 1, data: cached };
   }
@@ -123,9 +140,12 @@ export async function searchProducts(
 
     console.log(`[API CALL] Searching: "${params.query}" in ${country}`);
     const raw = await apiFetch<AmazonSearchResponse>(url);
+    console.log('[AMAZON API RESPONSE]', { status: raw.status, hasData: !!raw.data?.products });
 
-    if (raw.status !== "OK") {
-      return { success: false, error: "Amazon API returned a non-OK status." };
+    // More resilient status check: some API versions might return status: 200 or no status at all
+    if (raw.status !== "OK" && !raw.data?.products) {
+      console.error('[AMAZON API FAIL STATUS]', raw);
+      return { success: false, error: "Amazon API returned a non-OK status or missing data." };
     }
 
 
@@ -142,8 +162,16 @@ export async function searchProducts(
     };
 
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return { success: false, error: "Failed to fetch products", details: message };
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    const statusCode = (err as any).statusCode;
+    // On rate-limit (429) or unauthorized (403), cache the error state
+    // to prevent a retry storm. The frontend will use fallback data instead.
+    if (statusCode === 429 || statusCode === 403) {
+      cache.set(cacheKey, { data: RATE_LIMIT_SENTINEL, expiresAt: Date.now() + RATE_LIMIT_TTL });
+      console.warn(`[AMAZON] Rate limited (${statusCode}). Pausing calls for 1 hour.`);
+    }
+    console.error('[AMAZON SEARCH EXCEPTION]', err);
+    return { success: false, error: 'Failed to fetch products', details: message };
   }
 }
 
@@ -152,7 +180,13 @@ export async function searchProducts(
 export async function getProductDetails(
   params: AmazonProductDetailsParams
 ): Promise<ApiResponse<AmazonProduct>> {
-  const country = params.country ?? DEFAULT_COUNTRY;
+  let country = (params.country ?? DEFAULT_COUNTRY).toUpperCase();
+  
+  if (!SUPPORTED_COUNTRIES.includes(country)) {
+    console.warn(`[AMAZON] Requested country "${country}" is not supported. Falling back to "${DEFAULT_COUNTRY}".`);
+    country = DEFAULT_COUNTRY;
+  }
+
   const cacheKey = `detail::${params.asin}::${country}`;
 
   const cached = getCached<AmazonProduct>(cacheKey);

@@ -53,8 +53,10 @@ export async function createOrder(data: CreateOrderInput): Promise<string> {
       } else {
 
         const [[product]]: any = await connection.query(
-          `SELECT id, total_stock, price, is_active
-            FROM products WHERE id = ? FOR UPDATE`,
+          `SELECT p.id, p.total_stock, p.price, p.is_active, pv.id as default_variant_id
+            FROM products p
+            LEFT JOIN product_variants pv ON pv.product_id = p.id AND pv.is_default = 1
+            WHERE p.id = ? FOR UPDATE`,
           [item.product_id]
         );
 
@@ -63,6 +65,7 @@ export async function createOrder(data: CreateOrderInput): Promise<string> {
         if (product.total_stock < item.quantity) throw new Error("Insufficient product stock");
 
         unit_price = product.price;
+        item.variant_id = product.default_variant_id; // Auto-assign default variant if missing
       }
 
 
@@ -132,9 +135,15 @@ export async function createOrder(data: CreateOrderInput): Promise<string> {
 
 
       if (item.variant_id) {
+        // Deduct from variant
         await connection.query(
           "UPDATE product_variants SET stock = stock - ? WHERE id = ?",
           [item.quantity, item.variant_id]
+        );
+        // Also deduct from main product total
+        await connection.query(
+          "UPDATE products SET total_stock = total_stock - ? WHERE id = ?",
+          [item.quantity, item.product_id]
         );
       } else {
         await connection.query(
@@ -145,7 +154,40 @@ export async function createOrder(data: CreateOrderInput): Promise<string> {
     }
 
     await connection.commit();
-    return orderId;
+
+    // Send confirmation email
+    try {
+      const emailItems = [];
+      for (const item of data.items) {
+         const [[product]]: any = await pool.query("SELECT title, images FROM products WHERE id = ?", [item.product_id]);
+         const imgs = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
+         emailItems.push({
+           name: product.title,
+           quantity: item.quantity,
+           price: (item.unit_price! * item.quantity).toFixed(2),
+           image: imgs && imgs[0] ? imgs[0] : 'https://placehold.co/100x100'
+         });
+      }
+
+      const { addEmailToQueue } = require("../../notifications/queues/emailQueue");
+      await addEmailToQueue({
+        to: data.customer_email,
+        subject: "Order Confirmation - Teknova",
+        template: "orderConfirmation",
+        context: {
+          name: data.customer_name,
+          orderId: id.substring(0, 8).toUpperCase(),
+          total: total_amount.toFixed(2),
+          date: new Date().toLocaleDateString(),
+          items: emailItems
+        }
+      });
+    } catch (emailErr) {
+      console.error("Failed to send order email:", emailErr);
+      // Don't fail the order if email fails
+    }
+
+    return id;
   } catch (err) {
     await connection.rollback();
     throw err;
@@ -167,12 +209,28 @@ export async function getOrderById(orderId: string) {
 
   if (!order) return null;
 
-  const [items] = await pool.query(
-    "SELECT * FROM order_items WHERE order_id = ?",
+  const [items]: any = await pool.query(
+    `SELECT oi.*, p.title as product_name, pv.sku as variant_sku, 
+            COALESCE(pv.image_url, p.images) as image_url
+     FROM order_items oi
+     LEFT JOIN products p ON oi.product_id = p.id
+     LEFT JOIN product_variants pv ON oi.variant_id = pv.id
+     WHERE oi.order_id = ?`,
     [orderId]
   );
 
-  return { ...order, items };
+  const normalizedItems = items.map((item: any) => {
+    let img = item.image_url;
+    try {
+      const parsed = typeof img === 'string' ? JSON.parse(img) : img;
+      img = Array.isArray(parsed) ? parsed[0] : parsed;
+    } catch (e) {
+      // Keep as is
+    }
+    return { ...item, image_url: img };
+  });
+
+  return { ...order, items: normalizedItems };
 }
 
 export async function updateOrderStatus(
@@ -198,9 +256,15 @@ export async function cancelOrder(orderId: string) {
 
     for (const item of items) {
       if (item.variant_id) {
+        // Restore to variant
         await connection.query(
           "UPDATE product_variants SET stock = stock + ? WHERE id = ?",
           [item.quantity, item.variant_id]
+        );
+        // Also restore to main product total
+        await connection.query(
+          "UPDATE products SET total_stock = total_stock + ? WHERE id = ?",
+          [item.quantity, item.product_id]
         );
       } else {
         await connection.query(

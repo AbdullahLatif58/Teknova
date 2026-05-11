@@ -1,5 +1,5 @@
 export interface User {
-   id: number;
+   id: string;
    name: string;
    email: string;
    password_hash: string;
@@ -11,8 +11,8 @@ export interface User {
  }
  
  export interface PasswordReset {
-   id: number;
-   user_id: number;
+   id: string;
+   user_id: string;
    reset_token: string;
    expires_at: Date;
    used: boolean;
@@ -20,8 +20,8 @@ export interface User {
  }
  
  export interface UserSession {
-   id: number;
-   user_id: number;
+   id: string;
+   user_id: string;
    device_info: string;
    ip_address: string;
    refresh_token: string;

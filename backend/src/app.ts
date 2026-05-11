@@ -13,21 +13,29 @@ import templateRoutes from "./modules/templates/templates.routes";
 import analyticsRoutes from "./modules/analytics/analytics.routes";
 import promotionsRoutes from "./modules/promotions/promotions.routes";
 import logsRoutes from "./modules/logs/logs.routes";
+import contactsRoutes from "./modules/contacts/contacts.routes";
+import subscriptionsRoutes from "./modules/subscriptions/subscriptions.routes";
 import { pool } from "./config/db";
 import { logMiddleware } from "./utils/logs";
 import cors from "cors";
 import { globalErrorHandler } from "./utils/errors";
+import { authenticateToken } from "./modules/auth/auth.middleware";
+import { authorizeAdmin } from "./modules/auth/admin.middleware";
+import "./notifications/workers/emailWorker";
 const app = express();
+
+app.use(
+  cors({
+    origin: ["http://localhost:3000", "http://localhost:3001"],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-api-key", "Accept"],
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(
-  cors({
-    origin: ["http://localhost:3000", "http://localhost:5173"],
-    credentials: true,
-  })
-);
 
 app.use(logMiddleware(pool));
 app.use("/auth", authRoutes);
@@ -38,9 +46,11 @@ app.use("/orders", orderRoute);
 app.use("/amazon", productSuggestRoutes);
 app.use("/reviews", reviewRoutes);
 app.use("/templates", templateRoutes);
-app.use("/analytics", analyticsRoutes);
+app.use("/analytics", authenticateToken, authorizeAdmin, analyticsRoutes);
 app.use("/promotions", promotionsRoutes);
-app.use("/logs", logsRoutes);
+app.use("/logs", authenticateToken, authorizeAdmin, logsRoutes);
+app.use("/contacts", contactsRoutes);
+app.use("/subscriptions", subscriptionsRoutes);
 
 app.get("/", (_req, res) => {
   res.send("Hey Abdullah, the server is running 🚀");

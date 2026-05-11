@@ -7,12 +7,14 @@ import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { loginUser } from '@/app/api/auth/api';
 import { useDialog } from '@/components/context/DialogContext';
+import { useAuth } from '@/app/context/AuthContext';
 import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
   const { showToast } = useDialog();
 
+  const { login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -28,12 +30,9 @@ export default function LoginPage() {
     setLoading(true);
     
     try {
-      await loginUser(formData);
-      showToast('Login successful! Redirecting...', 'success');
-      // In a real app, you'd store the token here
-      setTimeout(() => {
-        router.push('/');
-      }, 500);
+      await login(formData.email, formData.password);
+      showToast('Login successful!', 'success');
+      // Redirect happens inside login() in AuthContext
     } catch (err: any) {
       showToast(err.message || 'Failed to authenticate', 'error');
     } finally {

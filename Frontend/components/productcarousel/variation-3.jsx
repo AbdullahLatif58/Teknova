@@ -16,9 +16,8 @@ export default function ProductCarousel3() {
         // Fetch categories for mapping
         const catData = await getCategories();
         const catMap = {};
-        if (catData.success && catData.data) {
-          catData.data.forEach(c => { catMap[c.id] = c.name; });
-        }
+        const cats = Array.isArray(catData) ? catData : (catData.data || []);
+        cats.forEach(c => { catMap[c.id] = c.name; });
 
         const data = await getFeaturedProducts();
         if (data) {
@@ -32,7 +31,7 @@ export default function ProductCarousel3() {
               price: Number(p.price),
               rating: p.popularity ? 4.5 : 4.0,
               reviewCount: 0,
-              image: p.images && p.images[0] ? (typeof p.images === 'string' ? JSON.parse(p.images)[0] : p.images[0]) : 'https://via.placeholder.com/600',
+              image: p.images && p.images[0] ? (typeof p.images === 'string' ? JSON.parse(p.images)[0] : p.images[0]) : 'https://placehold.co/600x600',
               new: false,
               featured: true
             }));

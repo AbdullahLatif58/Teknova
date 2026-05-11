@@ -31,12 +31,12 @@ export default function ConfirmDialog() {
       />
       
       {/* Dialog */}
-      <div className="relative w-full max-w-md overflow-hidden rounded-[2.5rem] border border-white/10 bg-[#0d0d14] p-8 shadow-2xl animate-in zoom-in-95 fade-in duration-300">
+      <div className="relative w-full max-w-md overflow-hidden rounded-[2.5rem] border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#0d0d14] p-8 shadow-2xl animate-in zoom-in-95 fade-in duration-300">
         <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-violet-600 to-fuchsia-600" />
         
         <button
           onClick={handleCancel}
-          className="absolute right-6 top-6 rounded-full p-2 text-zinc-500 hover:bg-white/5 hover:text-white transition-colors"
+          className="absolute right-6 top-6 rounded-full p-2 text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-white transition-colors"
         >
           <X className="h-5 w-5" />
         </button>
@@ -47,10 +47,10 @@ export default function ConfirmDialog() {
           </div>
 
           <div className="space-y-2">
-            <h2 className="text-2xl font-black text-white uppercase italic tracking-tighter">
+            <h2 className="text-2xl font-black text-zinc-900 dark:text-white uppercase italic tracking-tighter">
               {title}
             </h2>
-            <p className="text-sm font-medium text-zinc-400">
+            <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
               {message}
             </p>
           </div>

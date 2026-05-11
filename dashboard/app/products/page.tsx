@@ -87,7 +87,7 @@ export default function ProductsPage() {
     <div className="space-y-6 animate-in slide-in-from-bottom-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-black text-white uppercase tracking-tighter italic flex items-center gap-2">
+          <h2 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tighter italic flex items-center gap-2">
             <LayoutGrid className="text-violet-600" />
             Products <span className="text-violet-600">Inventory</span>
           </h2>
@@ -101,22 +101,38 @@ export default function ProductsPage() {
       <Breadcrumb items={[{ id: 'categories', label: 'Categories' }, { id: 'products', label: 'Products' }]} />
       
       <div className="flex flex-col md:flex-row gap-4">
-        <Input 
-          icon={Search} 
-          placeholder="Search products..." 
-          value={searchTerm}
-          onChange={(e) => handleSearch(e.target.value)}
-        />
+        <div className="flex-1">
+          <Input 
+            icon={Search} 
+            placeholder="Search products..." 
+            value={searchTerm}
+            onChange={(e) => handleSearch(e.target.value)}
+          />
+        </div>
         <div className="flex gap-4">
-          <Button variant="outline" icon={Filter} className="whitespace-nowrap">Filter</Button>
-          <Button variant="outline" icon={Download} className="whitespace-nowrap">Export</Button>
+          <select 
+            onChange={(e) => {
+              const catId = e.target.value;
+              if (catId === 'all') {
+                fetchInitialData();
+              } else {
+                setProducts(prev => prev.filter(p => String(p.category_id) === catId));
+              }
+            }}
+            className="bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 text-[11px] font-bold py-1.5 px-4 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-600 transition-all text-zinc-600 dark:text-zinc-400 uppercase tracking-wider h-[42px]"
+          >
+            <option value="all">All Categories</option>
+            {categories.map(cat => (
+              <option key={cat.id} value={String(cat.id)}>{cat.name}</option>
+            ))}
+          </select>
         </div>
       </div>
 
       <Card>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-[#0d0d14] text-[10px] font-black uppercase text-zinc-600 border-b border-white/5">
+            <thead className="bg-zinc-50 dark:bg-[#0d0d14] text-[10px] font-black uppercase text-zinc-500 dark:text-zinc-600 border-b border-zinc-200 dark:border-white/5">
               <tr>
                 <th className="px-6 py-4">Product Unit</th>
                 <th className="px-6 py-4">Handle</th>
@@ -127,7 +143,7 @@ export default function ProductsPage() {
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-zinc-200 dark:divide-white/5">
               {loading ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-10 text-center text-zinc-500 font-medium italic">Synchronizing assets...</td>
@@ -138,22 +154,34 @@ export default function ProductsPage() {
                 </tr>
               ) : (
                 products.map(p => (
-                  <tr key={p.id} className="hover:bg-white/5 transition-colors group">
+                  <tr key={p.id} className="hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-700 overflow-hidden flex items-center justify-center text-zinc-500">
-                          {p.images && p.images.length > 0 ? (
-                            <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover" />
-                          ) : p.image_url ? (
-                            <img src={p.image_url} alt={p.title} className="w-full h-full object-cover" />
-                          ) : (
-                            <Package size={18} />
-                          )}
+                        <div className="w-10 h-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 overflow-hidden flex items-center justify-center text-zinc-400 dark:text-zinc-500">
+                          {(() => {
+                            let imgSrc = null;
+                            if (p.images) {
+                              try {
+                                const parsed = typeof p.images === 'string' ? JSON.parse(p.images) : p.images;
+                                if (Array.isArray(parsed) && parsed[0]) imgSrc = parsed[0];
+                                else if (typeof parsed === 'string') imgSrc = parsed;
+                              } catch (e) {
+                                if (Array.isArray(p.images) && p.images[0]) imgSrc = p.images[0];
+                              }
+                            }
+                            if (!imgSrc && p.image_url) imgSrc = p.image_url;
+
+                            return imgSrc ? (
+                              <img src={imgSrc} alt={p.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <Package size={18} />
+                            );
+                          })()}
                         </div>
-                        <span className="font-black text-zinc-200 text-xs">{p.title}</span>
+                        <span className="font-black text-zinc-900 dark:text-zinc-200 text-xs">{p.title}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-[10px] font-mono font-bold text-zinc-500">{p.page_handle}</td>
+                    <td className="px-6 py-4 text-[10px] font-mono font-bold text-zinc-400 dark:text-zinc-500">{p.page_handle}</td>
                     <td className="px-6 py-4">
                       <Badge variant="info">
                         {categories.find(c => String(c.id) === String(p.category_id))?.name || 'Segment'}
@@ -162,7 +190,7 @@ export default function ProductsPage() {
                     <td className="px-6 py-4 font-black text-emerald-400 text-xs">
                       ${typeof p.price === 'string' ? parseFloat(p.price).toFixed(2) : p.price.toFixed(2)}
                     </td>
-                    <td className="px-6 py-4 text-center text-xs font-black text-zinc-500">
+                    <td className="px-6 py-4 text-center text-xs font-black text-zinc-400 dark:text-zinc-500">
                       {p.total_stock} <span className="text-[10px] opacity-50 uppercase">Units</span>
                     </td>
                     <td className="px-6 py-4 text-center">

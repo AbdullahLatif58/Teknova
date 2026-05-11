@@ -123,8 +123,9 @@ export default function GlobalVariantsPage() {
     <div className="space-y-6 animate-in slide-in-from-bottom-4">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-black text-white uppercase tracking-tighter italic">
-            Global <span className="text-sky-500 font-black">Variants</span>
+          <h2 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tighter italic flex items-center gap-2">
+            <Layers className="text-violet-600" />
+            Global <span className="text-violet-600">Variants</span>
           </h2>
           <p className="text-sm text-zinc-500 mt-1 font-medium italic">Select a product context to manage its specific configurations.</p>
         </div>
@@ -132,7 +133,7 @@ export default function GlobalVariantsPage() {
         <Button
           onClick={navigateToCreate}
           icon={Plus}
-          className="bg-sky-600 hover:bg-sky-500 shadow-[0_10px_30px_rgba(14,165,233,0.3)] transition-all"
+          className="bg-violet-600 hover:bg-violet-500 shadow-[0_10px_30px_rgba(124,58,237,0.3)] transition-all"
           disabled={!selectedProduct}
         >
           Add Configuration
@@ -143,9 +144,9 @@ export default function GlobalVariantsPage() {
         { id: 'variants', label: 'Global Variants', href: '/variants' }
       ]} />
 
-      <Card className="bg-[#0d0d14] border-zinc-800">
-        <div className="p-6 border-b border-white/5 space-y-4">
-          <label className="text-[10px] font-black uppercase text-sky-500 tracking-widest flex items-center gap-2">
+      <Card className="bg-white dark:bg-[#0d0d14] border-zinc-200 dark:border-zinc-800">
+        <div className="p-6 border-b border-zinc-100 dark:border-white/5 space-y-4">
+          <label className="text-[10px] font-black uppercase text-violet-600 dark:text-violet-500 tracking-widest flex items-center gap-2">
             <Layers size={14} /> Active Product Context
           </label>
           <div className="flex flex-col md:flex-row items-center gap-4">
@@ -188,7 +189,7 @@ export default function GlobalVariantsPage() {
                   placeholder="Search variants by title or SKU..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 bg-[#0a0a10] border border-zinc-800 rounded-xl text-zinc-300 text-sm focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/50 transition-all placeholder:text-zinc-600"
+                  className="w-full pl-11 pr-4 py-3 bg-zinc-50 dark:bg-[#0a0a10] border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-zinc-300 text-sm focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all placeholder:text-zinc-500 dark:placeholder:text-zinc-600"
                 />
               </div>
             </div>
@@ -204,7 +205,7 @@ export default function GlobalVariantsPage() {
             </div>
           ) : (
             <table className="w-full text-left">
-              <thead className="bg-[#0a0a10] text-[10px] font-black uppercase text-zinc-600 border-b border-zinc-800">
+              <thead className="bg-zinc-50 dark:bg-[#0a0a10] text-[10px] font-black uppercase text-zinc-500 dark:text-zinc-600 border-b border-zinc-200 dark:border-zinc-800">
                 <tr>
                   <th className="px-6 py-4">Configuration</th>
                   <th className="px-6 py-4">SKU</th>
@@ -215,11 +216,11 @@ export default function GlobalVariantsPage() {
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-zinc-200 dark:divide-white/5">
                 {loadingVariants ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-12 text-center">
-                      <Loader2 className="animate-spin text-sky-500 mx-auto" />
+                      <Loader2 className="animate-spin text-violet-600 mx-auto" />
                     </td>
                   </tr>
                 ) : filteredVariants.length === 0 ? (
@@ -230,23 +231,35 @@ export default function GlobalVariantsPage() {
                   </tr>
                 ) : (
                   filteredVariants.map(v => (
-                    <tr key={v.id} className="group hover:bg-white/5 transition-colors">
+                    <tr key={v.id} className="group hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-700 overflow-hidden flex items-center justify-center">
-                            {v.images && v.images.length > 0 ? (
-                              <img src={v.images[0]} className="w-full h-full object-cover" />
-                            ) : v.image_url ? (
-                              <img src={v.image_url} className="w-full h-full object-cover" />
-                            ) : (
-                              <Box size={18} className="text-zinc-500" />
-                            )}
+                          <div className="w-10 h-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 overflow-hidden flex items-center justify-center">
+                            {(() => {
+                            let imgSrc = null;
+                            const rawImages = v.images || v.image_url;
+                            if (rawImages) {
+                              try {
+                                const parsed = typeof rawImages === 'string' ? JSON.parse(rawImages) : rawImages;
+                                if (Array.isArray(parsed) && parsed[0]) imgSrc = parsed[0];
+                                else if (typeof parsed === 'string') imgSrc = parsed;
+                              } catch (e) {
+                                if (typeof rawImages === 'string' && rawImages.includes(',')) {
+                                  imgSrc = rawImages.split(',')[0];
+                                } else if (typeof rawImages === 'string') {
+                                  imgSrc = rawImages;
+                                }
+                              }
+                            }
+                            if (imgSrc) return <img src={imgSrc} alt={v.title} className="w-full h-full object-cover" />;
+                            return <Box size={18} className="text-zinc-500" />;
+                          })()}
                           </div>
 
                         </div>
                       </td>
                       <td className="px-6 py-4 text-[10px] font-mono font-bold text-zinc-500 uppercase">{v.sku || 'N/A'}</td>
-                      <td className="px-6 py-4 font-black text-sky-400 text-xs italic">${Number(v.price).toFixed(2)}</td>
+                      <td className="px-6 py-4 font-black text-violet-600 dark:text-violet-400 text-xs italic">${Number(v.price).toFixed(2)}</td>
                       <td className="px-6 py-4 text-center text-xs font-black text-zinc-500 italic">
                         {v.stock} <span className="text-[10px] opacity-50 uppercase">Units</span>
                       </td>

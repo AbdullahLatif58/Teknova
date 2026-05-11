@@ -31,7 +31,7 @@ function CategoryAvatar({
   const initial = name?.charAt(0)?.toUpperCase() || 'C';
 
   return (
-    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] shadow-[0_0_0_1px_rgba(255,255,255,0.03)]">
+    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/[0.04] shadow-sm">
       {imageUrl && !hasError ? (
         <img
           src={imageUrl}
@@ -40,7 +40,7 @@ function CategoryAvatar({
           onError={() => setHasError(true)}
         />
       ) : (
-        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-600/30 to-fuchsia-500/20 text-sm font-black uppercase text-white">
+        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-600/30 to-fuchsia-500/20 text-sm font-black uppercase text-zinc-900 dark:text-white">
           {initial}
         </div>
       )}
@@ -121,8 +121,9 @@ export default function CategoriesPage() {
   return (
     <div className="space-y-6 animate-in slide-in-from-bottom-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-black text-white uppercase tracking-tighter italic">
-          Categories
+        <h2 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tighter italic flex items-center gap-2">
+          <LayoutGrid className="text-violet-600" />
+          Categories <span className="text-violet-600">Hub</span>
         </h2>
         <Button onClick={() => router.push(`/categories/create`)} icon={Plus}>
           Add Category
@@ -134,7 +135,7 @@ export default function CategoriesPage() {
       <Card>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-[#0d0d14] text-[10px] font-black uppercase text-zinc-600 border-b border-white/5">
+            <thead className="bg-zinc-50 dark:bg-[#0d0d14] text-[10px] font-black uppercase text-zinc-500 dark:text-zinc-600 border-b border-zinc-200 dark:border-white/5">
               <tr>
                 <th className="px-6 py-4">#</th>
                 <th className="px-6 py-4">Image</th>
@@ -146,7 +147,7 @@ export default function CategoriesPage() {
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-zinc-200 dark:divide-white/5">
               {loading ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-4 text-center text-zinc-500">
@@ -161,7 +162,7 @@ export default function CategoriesPage() {
                 </tr>
               ) : (
                 categories.map((c, i) => (
-                  <tr key={c.id} className="group hover:bg-white/5 transition-colors">
+                  <tr key={c.id} className="group hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors">
                     <td className="px-6 py-4 text-xs font-bold text-zinc-600">{i + 1}</td>
 
                     <td className="px-6 py-4">
@@ -170,7 +171,7 @@ export default function CategoriesPage() {
 
                     <td className="px-6 py-4">
                       <div className="min-w-0">
-                        <p className="font-black text-zinc-200 leading-none">{c.name}</p>
+                        <p className="font-black text-zinc-900 dark:text-zinc-200 leading-none">{c.name}</p>
                         <p className="mt-1 text-[11px] font-medium text-zinc-500">
                           Category
                         </p>

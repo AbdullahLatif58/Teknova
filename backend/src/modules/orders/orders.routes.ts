@@ -24,7 +24,6 @@ router.post(
     body("customer_name").notEmpty().withMessage("Customer name is required"),
     body("customer_email").isEmail().withMessage("Invalid customer email"),
     body("items").isArray({ min: 1 }).withMessage("Order must have at least one item"),
-    body("total_amount").isNumeric().withMessage("Total amount must be a number"),
   ]),
   createOrderController
 );

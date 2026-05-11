@@ -38,8 +38,13 @@ export default function CartPage3() {
         {/* Items */}
         <div className="lg:col-span-2 space-y-4">
           {items.map(item => (
-            <div key={item.id} className="flex gap-4 p-4 bg-card border border-border rounded-2xl">
-              <img src={item.image} alt={item.name} className="w-24 h-24 object-cover rounded-xl" />
+            <div key={`${item.id}-${item.color || 'default'}`} className="flex gap-4 p-4 bg-card border border-border rounded-2xl">
+              <img 
+                src={item.image} 
+                alt={item.name} 
+                className="w-24 h-24 object-cover rounded-xl"
+                onError={(e) => { e.target.src = 'https://placehold.co/600x600'; }}
+              />
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between">
                   <div>

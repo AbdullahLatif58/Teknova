@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, CreditCard, User, Truck, MapPin, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Loader2, CreditCard, User, Truck, MapPin, CheckCircle2, XCircle, Clock, ShoppingCart } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
@@ -187,27 +187,48 @@ export default function OrderDetailsPage() {
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {order.order_items && order.order_items.length > 0 ? (
-                    order.order_items.map((item) => (
-                      <tr key={item.id} className="hover:bg-white/5 transition-colors">
-                        <td className="px-4 py-4">
-                          <div className="flex flex-col">
-                            <span className="font-bold text-zinc-200 text-sm">Product #{item.product_id}</span>
-                            {item.variant_id && (
-                              <span className="text-[10px] text-zinc-500 font-medium">Variant #{item.variant_id}</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 text-xs font-medium text-zinc-400">
-                          ${Number(item.unit_price).toFixed(2)}
-                        </td>
-                        <td className="px-4 py-4 text-center text-xs font-black text-sky-500">
-                          x{item.quantity}
-                        </td>
-                        <td className="px-4 py-4 text-right font-black text-white text-sm">
-                          ${Number(item.final_price).toFixed(2)}
-                        </td>
-                      </tr>
-                    ))
+                    order.order_items.map((item) => {
+                      let imgSrc = null;
+                      if (item.image_url) {
+                        try {
+                          const parsed = typeof item.image_url === 'string' ? JSON.parse(item.image_url) : item.image_url;
+                          imgSrc = Array.isArray(parsed) ? parsed[0] : parsed;
+                        } catch (e) {
+                          imgSrc = item.image_url;
+                        }
+                      }
+
+                      return (
+                        <tr key={item.id} className="hover:bg-white/5 transition-colors">
+                          <td className="px-4 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-700 overflow-hidden flex items-center justify-center text-zinc-500">
+                                {imgSrc ? (
+                                  <img src={imgSrc} alt={item.product_name} className="w-full h-full object-cover" />
+                                ) : (
+                                  <ShoppingCart size={14} />
+                                )}
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="font-bold text-zinc-200 text-sm">{item.product_name || `Product #${item.product_id}`}</span>
+                                {item.variant_sku && (
+                                  <span className="text-[10px] text-zinc-500 font-medium">SKU: {item.variant_sku}</span>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 text-xs font-medium text-zinc-400">
+                            ${Number(item.unit_price).toFixed(2)}
+                          </td>
+                          <td className="px-4 py-4 text-center text-xs font-black text-sky-500">
+                            x{item.quantity}
+                          </td>
+                          <td className="px-4 py-4 text-right font-black text-white text-sm">
+                            ${Number(item.final_price).toFixed(2)}
+                          </td>
+                        </tr>
+                      );
+                    })
                   ) : (
                     <tr>
                       <td colSpan={4} className="px-4 py-8 text-center text-zinc-500 italic text-sm">

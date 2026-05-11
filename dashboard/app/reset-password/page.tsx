@@ -49,7 +49,7 @@ export default function ResetPasswordPage() {
     
     try {
       await resetPassword(token, {
-        password: formData.password
+        newPassword: formData.password
       });
       showToast('Authorization Key updated securely! Redirecting to login...', 'success');
       setTimeout(() => {

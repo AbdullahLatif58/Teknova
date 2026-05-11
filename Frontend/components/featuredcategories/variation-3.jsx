@@ -12,10 +12,9 @@ export default function FeaturedCategories3() {
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const result = await getCategories();
-        if (result && result.data) {
-          setCategories(result.data || []);
-        }
+        const data = await getCategories();
+        const cats = Array.isArray(data) ? data : (data.data || []);
+        setCategories(cats);
       } catch (err) {
         console.error(err);
       } finally {
@@ -39,7 +38,7 @@ export default function FeaturedCategories3() {
             <div key={cat.id} className="snap-start shrink-0 w-64">
               <Link href={'/products?category=' + encodeURIComponent(cat.name)} className="group block">
                 <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4 glow-warm">
-                  <img src={cat.image_url || 'https://via.placeholder.com/400'} alt={cat.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <img src={cat.image_url || 'https://placehold.co/400x400'} alt={cat.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-2xl font-heading text-muted-foreground/30 font-bold">{String(i + 1).padStart(2,'0')}</span>

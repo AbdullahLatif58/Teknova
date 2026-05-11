@@ -3,9 +3,9 @@ import { useTheme } from '../../context/ThemeContext';
 import { Sparkles } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import ProductCard from '../ui/ProductCard';
-import { searchAmazon } from '../../api/amazon';
+import { searchAmazon, mapAmazonProducts } from '../../api/amazon';
 
-export default function AISuggestions1({ product }) {
+export default function AISuggestions1({ product, keyword }) {
   const { variation } = useTheme();
   const [suggested, setSuggested] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,31 +14,21 @@ export default function AISuggestions1({ product }) {
     const fetchSuggestions = async () => {
       try {
         setLoading(true);
-        // Using the product category or name for AI search query
+        // Using prop keyword, product name, or a fixed home page keyword
         let query;
-        if (product) {
-          query = product.category || product.name || 'tech gadgets';
+        if (keyword) {
+          query = keyword;
+        } else if (product) {
+          query = product.name || product.title || 'latest gadgets';
         } else {
-          // Random search for home page
-          const randomKeywords = ['gaming laptop', 'smart watch', 'wireless earbuds', 'mechanical keyboard', '4k monitor', 'dslr camera', 'iphone 15 cases'];
-          query = randomKeywords[Math.floor(Math.random() * randomKeywords.length)];
+          // Default keyword for homepage
+          query = 'latest tech gadgets';
         }
 
         const result = await searchAmazon(query, 3);
         
         if (result.success && result.data) {
-          const mapped = result.data.slice(0, 3).map(p => ({
-            id: p.asin,
-            slug: `https://amazon.com/dp/${p.asin}`, // Link to Amazon
-            name: p.title,
-            price: parseFloat(p.price) || 0,
-            image: p.image_url || 'https://via.placeholder.com/600',
-            brand: 'Amazon AI Pick',
-            rating: 4.5,
-            reviewCount: Math.floor(Math.random() * 100) + 10,
-            stock: 'In Stock',
-            category: 'AI Suggestion'
-          }));
+          const mapped = mapAmazonProducts(result.data.slice(0, 3));
           setSuggested(mapped);
         } else {
           setSuggested([]);
@@ -50,7 +40,7 @@ export default function AISuggestions1({ product }) {
       }
     };
     fetchSuggestions();
-  }, [product]);
+  }, [product, keyword]);
 
   return (
     <section className={'py-20 ' + (variation === 2 ? 'bg-secondary' : 'bg-background')}>

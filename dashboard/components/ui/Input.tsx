@@ -21,7 +21,7 @@ const Input = ({ icon: Icon, label, placeholder, className = "", error, ...props
       <input
         {...props}
         placeholder={placeholder}
-        className={`w-full bg-[#0d0d14] border ${error ? 'border-rose-500 focus:ring-rose-500/10' : 'border-zinc-800 focus:ring-violet-600/20 focus:border-violet-600'} rounded-lg py-2.5 ${Icon ? 'pl-10' : 'px-4'} pr-4 text-sm text-zinc-200 focus:outline-none focus:ring-2 transition-all`}
+        className={`w-full bg-zinc-50 dark:bg-[#0d0d14] border ${error ? 'border-rose-500 focus:ring-rose-500/10' : 'border-zinc-200 dark:border-zinc-800 focus:ring-violet-600/20 focus:border-violet-600'} rounded-lg py-2.5 ${Icon ? 'pl-10' : 'px-4'} pr-4 text-sm text-zinc-900 dark:text-zinc-200 placeholder:text-zinc-400 focus:outline-none focus:ring-2 transition-all`}
       />
     </div>
     {error && (

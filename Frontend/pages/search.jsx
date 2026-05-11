@@ -6,8 +6,9 @@ import Layout from '../components/Layout';
 import { useTheme } from '../context/ThemeContext';
 import ProductCard from '../components/ui/ProductCard';
 import { getProducts } from '../api/products';
-import { searchAmazon } from '../api/amazon';
-import { Mic, MicOff } from 'lucide-react';
+import { searchAmazon, mapAmazonProducts } from '../api/amazon';
+import { Mic, MicOff, Search, Sparkles } from 'lucide-react';
+import AISuggestions1 from '../components/aisuggestions/variation-1';
 
 const POPULAR = ['iPhone 15 Pro', 'MacBook Pro', 'Sony Headphones', 'Gaming Keyboard', 'iPad Pro'];
 
@@ -16,9 +17,7 @@ export default function SearchPage() {
   const { q } = router.query;
   const { variation } = useTheme();
   const [allProducts, setAllProducts] = useState([]);
-  const [aiResults, setAiResults] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [aiLoading, setAiLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
 
   useEffect(() => {
@@ -26,8 +25,10 @@ export default function SearchPage() {
       try {
         setLoading(true);
         const data = await getProducts(100);
-        if (data && data.products) {
-          const mapped = data.products.map(p => ({
+        const productsList = Array.isArray(data) ? data : (data.products || []);
+        
+        if (productsList.length > 0) {
+          const mapped = productsList.map(p => ({
             id: p.id,
             slug: p.page_handle,
             name: p.title,
@@ -36,7 +37,7 @@ export default function SearchPage() {
             price: Number(p.price),
             rating: 4.5,
             reviewCount: 12,
-            image: p.images && p.images[0] ? (typeof p.images === 'string' ? JSON.parse(p.images)[0] : p.images[0]) : 'https://via.placeholder.com/600',
+            image: p.images && p.images[0] ? (typeof p.images === 'string' ? JSON.parse(p.images)[0] : p.images[0]) : 'https://placehold.co/600x600',
             new: false,
             featured: p.is_featured === 1,
             tags: p.tags ? (typeof p.tags === 'string' ? JSON.parse(p.tags) : p.tags) : []
@@ -52,36 +53,8 @@ export default function SearchPage() {
     fetchAll();
   }, []);
 
-  useEffect(() => {
-    if (!q) return;
-    const fetchAI = async () => {
-      try {
-        setAiLoading(true);
-        const result = await searchAmazon(q, 4);
-        if (result.success && result.data) {
-          const mapped = result.data.map(p => ({
-            id: p.asin,
-            slug: `https://amazon.com/dp/${p.asin}`,
-            name: p.title,
-            price: parseFloat(p.price) || 0,
-            image: p.image_url || 'https://via.placeholder.com/600',
-            brand: 'Amazon AI Pick',
-            rating: 4.5,
-            reviewCount: 100,
-            category: 'AI Suggestion'
-          }));
-          setAiResults(mapped);
-        } else {
-          setAiResults([]);
-        }
-      } catch (err) {
-        console.error('AI search failed', err);
-      } finally {
-        setAiLoading(false);
-      }
-    };
-    fetchAI();
-  }, [q]);
+
+
 
   const startVoiceSearch = () => {
     if (!('webkitSpeechRecognition' in window)) {
@@ -190,38 +163,10 @@ export default function SearchPage() {
               </div>
             )}
 
-            {/* AI Results Section */}
-            {query && (
-              <div className="aipicls mb-16 rounded-2xl p-8 bg-secondary/50 border border-border/50">
-                <div className="flex items-center gap-2 mb-6">
-                  <Sparkles size={18} className={accentCls} />
-                  <h3 className={'font-heading text-xl font-bold text-foreground ' + (variation === 3 ? 'italic' : '')}>
-                    {variation === 2 ? <span className="text-gradient-neon">AI Global Results</span> : 'AI Global Results'}
-                  </h3>
-                  {aiLoading && <div className="ml-2 w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>}
-                </div>
-                {aiResults.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    {aiResults.map(p => <ProductCard key={p.id} product={p} />)}
-                  </div>
-                ) : !aiLoading && (
-                  <p className="text-sm text-muted-foreground italic">No global AI results found for this query.</p>
-                )}
-              </div>
-            )}
-
-            {/* AI Picks Section (Static/Featured) */}
-            <section className={'rounded-2xl p-8 ' + (variation === 2 ? 'bg-secondary border border-border' : variation === 3 ? 'bg-secondary' : 'bg-secondary')}>
-              <div className="flex items-center gap-2 mb-6">
-                <Sparkles size={18} className={accentCls} />
-                <h3 className={'font-heading text-xl font-bold text-foreground ' + (variation === 3 ? 'italic' : '')}>
-                  {variation === 2 ? <span className="text-gradient-neon">AI Picks For You</span> : 'AI Picks For You'}
-                </h3>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                {aiPicks.map(p => <ProductCard key={p.id} product={p} />)}
-              </div>
-            </section>
+            {/* Dynamic AI Results based on search query */}
+            <div className="mt-16">
+              <AISuggestions1 keyword={q} />
+            </div>
 
           </div>
         </div>

@@ -3,13 +3,23 @@ import { Star, Heart, ShoppingCart, Truck, Shield, RefreshCw, Share2 } from 'luc
 import { useCart } from '../../context/CartContext';
 import { useTheme } from '../../context/ThemeContext';
 
-export default function ProductInfo({ product }) {
+export default function ProductInfo({ product, onVariantChange }) {
   const { addItem } = useCart();
   const { variation } = useTheme();
   const [selectedColor, setSelectedColor] = useState(product?.colors?.[0] || null);
   const [selectedSize, setSelectedSize] = useState(product?.sizes?.[0] || null);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+
+  const handleColorChange = (c) => {
+    setSelectedColor(c);
+    if (onVariantChange) onVariantChange(c, selectedSize);
+  };
+
+  const handleSizeChange = (s) => {
+    setSelectedSize(s);
+    if (onVariantChange) onVariantChange(selectedColor, s);
+  };
 
   if (!product) return null;
 
@@ -64,7 +74,7 @@ export default function ProductInfo({ product }) {
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Color: <span className="text-foreground">{selectedColor}</span></p>
           <div className="flex flex-wrap gap-2">
             {product.colors.map(c => (
-              <button key={c} onClick={() => setSelectedColor(c)}
+              <button key={c} onClick={() => handleColorChange(c)}
                 className={'px-3 py-1.5 text-xs rounded-full border transition-all ' + (c === selectedColor ? 'border-primary bg-primary/5 text-foreground font-medium' : 'border-border text-muted-foreground hover:border-foreground')}>
                 {c}
               </button>
@@ -79,7 +89,7 @@ export default function ProductInfo({ product }) {
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Option: <span className="text-foreground">{selectedSize}</span></p>
           <div className="flex flex-wrap gap-2">
             {product.sizes.map(s => (
-              <button key={s} onClick={() => setSelectedSize(s)}
+              <button key={s} onClick={() => handleSizeChange(s)}
                 className={'px-3 py-1.5 text-xs rounded-full border transition-all ' + (s === selectedSize ? 'border-primary bg-primary/5 text-foreground font-medium' : 'border-border text-muted-foreground hover:border-foreground')}>
                 {s}
               </button>

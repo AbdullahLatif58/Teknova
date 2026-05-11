@@ -59,3 +59,13 @@ export const refreshToken = async () => {
   const res = await axiosClient.post("/auth/refresh-token");
   return res.data;
 };
+
+export const listUsers = async () => {
+  const res = await axiosClient.get("/auth/users");
+  return res.data;
+};
+
+export const deleteUser = async (id: string) => {
+  const res = await axiosClient.delete(`/auth/users/${id}`);
+  return res.data;
+};

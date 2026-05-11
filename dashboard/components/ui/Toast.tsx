@@ -12,10 +12,10 @@ const icons = {
 };
 
 const bgColors = {
-  success: 'bg-emerald-500/10 border-emerald-500/20',
-  error: 'bg-rose-500/10 border-rose-500/20',
-  warning: 'bg-amber-500/10 border-amber-500/20',
-  info: 'bg-sky-500/10 border-sky-500/20',
+  success: 'bg-white dark:bg-emerald-500/10 border-zinc-200 dark:border-emerald-500/20',
+  error: 'bg-white dark:bg-rose-500/10 border-zinc-200 dark:border-rose-500/20',
+  warning: 'bg-white dark:bg-amber-500/10 border-zinc-200 dark:border-amber-500/20',
+  info: 'bg-white dark:bg-sky-500/10 border-zinc-200 dark:border-sky-500/20',
 };
 
 export default function ToastContainer() {
@@ -31,13 +31,13 @@ export default function ToastContainer() {
           <div className="flex items-start gap-3">
             <div className="mt-0.5">{icons[toast.type]}</div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white leading-tight">
+              <p className="text-sm font-bold text-zinc-900 dark:text-white leading-tight">
                 {toast.message}
               </p>
             </div>
             <button
               onClick={() => removeToast(toast.id)}
-              className="p-1 rounded-lg hover:bg-white/10 transition-colors text-zinc-500 hover:text-white"
+              className="p-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-white/10 transition-colors text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
             >
               <X className="w-4 h-4" />
             </button>

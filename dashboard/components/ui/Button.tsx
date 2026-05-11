@@ -11,9 +11,9 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 const Button = ({ children, variant = 'primary', className = "", icon: Icon, full = false, size = 'md', ...props }: ButtonProps) => {
   const variants: Record<string, string> = {
     primary: 'bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-600/20',
-    secondary: 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200',
-    ghost: 'bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white',
-    outline: 'bg-transparent border border-zinc-700 hover:border-violet-600 text-zinc-300',
+    secondary: 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-200',
+    ghost: 'bg-transparent hover:bg-zinc-100 dark:hover:bg-white/5 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white',
+    outline: 'bg-transparent border border-zinc-200 dark:border-zinc-700 hover:border-violet-600 text-zinc-600 dark:text-zinc-300',
   };
   const sizes: Record<string, string> = { sm: 'px-3 py-1.5 text-xs', md: 'px-4 py-2 text-sm', lg: 'px-6 py-3 text-base' };
   return (

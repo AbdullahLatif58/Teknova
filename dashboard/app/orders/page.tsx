@@ -60,9 +60,9 @@ export default function OrdersPage() {
     <div className="space-y-6 animate-in slide-in-from-bottom-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-black text-white uppercase tracking-tighter italic flex items-center gap-3">
-            <ShoppingCart className="text-sky-500" size={28} />
-            Order Management
+          <h2 className="text-3xl font-black text-zinc-900 dark:text-white uppercase tracking-tighter italic flex items-center gap-3">
+            <ShoppingCart className="text-violet-600" size={28} />
+            Order <span className="text-violet-600">Management</span>
           </h2>
           <p className="text-sm text-zinc-500 mt-1 font-medium italic">
             Monitor and process customer transactions.
@@ -70,7 +70,7 @@ export default function OrdersPage() {
         </div>
         <Button 
           onClick={() => router.push('/orders/create')} 
-          className="bg-sky-600 hover:bg-sky-500 shadow-[0_10px_30px_rgba(14,165,233,0.3)] transition-all"
+          className="bg-violet-600 hover:bg-violet-500 shadow-[0_10px_30px_rgba(124,58,237,0.3)] transition-all"
         >
           Manual Entry
         </Button>
@@ -83,7 +83,7 @@ export default function OrdersPage() {
       <Card>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-[#0d0d14] text-[10px] font-black uppercase text-zinc-600 border-b border-white/5">
+            <thead className="bg-zinc-50 dark:bg-[#0d0d14] text-[10px] font-black uppercase text-zinc-500 dark:text-zinc-600 border-b border-zinc-200 dark:border-white/5">
               <tr>
                 <th className="px-6 py-4">Order ID</th>
                 <th className="px-6 py-4">Customer</th>
@@ -93,7 +93,7 @@ export default function OrdersPage() {
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-zinc-200 dark:divide-white/5">
               {loading ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-10 text-center">
@@ -112,20 +112,20 @@ export default function OrdersPage() {
                 </tr>
               ) : (
                 orders.map(order => (
-                  <tr key={order.id} className="group hover:bg-white/5 transition-colors">
+                  <tr key={order.id} className="group hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors">
                     <td className="px-6 py-4">
-                      <span className="text-xs font-mono font-bold text-sky-400">#{order.id}</span>
+                      <span className="text-xs font-mono font-bold text-violet-600 dark:text-violet-400">#{order.id}</span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
-                        <span className="font-bold text-zinc-200 text-sm">{order.customer_name}</span>
+                        <span className="font-bold text-zinc-900 dark:text-zinc-200 text-sm">{order.customer_name}</span>
                         <span className="text-[10px] text-zinc-500 font-medium">{order.customer_email}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-xs font-medium text-zinc-400">
+                    <td className="px-6 py-4 text-xs font-medium text-zinc-500 dark:text-zinc-400">
                       {formatDate(order.created_at)}
                     </td>
-                    <td className="px-6 py-4 font-black text-white text-sm">
+                    <td className="px-6 py-4 font-black text-zinc-900 dark:text-white text-sm">
                       ${Number(order.total_amount).toFixed(2)}
                       {order.is_paid ? (
                         <span className="ml-2 text-[9px] uppercase tracking-widest text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">Paid</span>
@@ -139,7 +139,7 @@ export default function OrdersPage() {
                     <td className="px-6 py-4 text-right">
                       <button 
                         onClick={() => router.push(`/orders/${order.id}`)}
-                        className="p-2 text-zinc-500 hover:text-sky-400 transition-colors bg-white/5 hover:bg-sky-400/10 rounded-lg inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider"
+                        className="p-2 text-zinc-500 hover:text-violet-600 transition-colors bg-zinc-100 dark:bg-white/5 hover:bg-violet-600/10 rounded-lg inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider"
                       >
                         <Eye size={14} /> View
                       </button>

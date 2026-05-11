@@ -2,7 +2,6 @@ import { useTheme } from '../../context/ThemeContext';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useState } from 'react';
 
-const brands = ['Apple','Samsung','Sony','Dell','Bose','Razer','Logitech','Fujifilm'];
 const priceRanges = [
   { label: 'Under $100', min: 0, max: 100 },
   { label: '$100 – $500', min: 100, max: 500 },
@@ -44,29 +43,6 @@ export default function FiltersSidebar2({ filters, onFilterChange, onClear, cate
                   <input type="radio" name="category" checked={active} onChange={() => onFilterChange?.('category', active ? '' : name)}
                     className="accent-primary" />
                   <span className={'text-sm transition-colors ' + (active ? checkActiveCls + ' font-medium' : 'text-muted-foreground group-hover:text-foreground')}>{name}</span>
-                </label>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Brand */}
-      <div className="mb-6 border-b border-border pb-6">
-        <button onClick={() => toggle('brand')} className="flex items-center justify-between w-full mb-3">
-          <span className={labelCls.replace('mb-3','')}>Brand</span>
-          {open.brand ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
-        </button>
-        {open.brand && (
-          <div className="space-y-2">
-            {brands.map(brand => {
-              const active = (filters?.brands || []).includes(brand);
-              return (
-                <label key={brand} className="flex items-center gap-2.5 cursor-pointer group">
-                  <input type="checkbox" checked={active}
-                    onChange={() => { const cur = filters?.brands || []; onFilterChange?.('brands', active ? cur.filter(b => b !== brand) : [...cur, brand]); }}
-                    className="accent-primary rounded" />
-                  <span className={'text-sm transition-colors ' + (active ? checkActiveCls + ' font-medium' : 'text-muted-foreground group-hover:text-foreground')}>{brand}</span>
                 </label>
               );
             })}

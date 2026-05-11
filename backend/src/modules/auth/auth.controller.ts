@@ -41,7 +41,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 
 
   const accessToken = jwt.sign(
-    { id: user.id, email: user.email },
+    { id: user.id, email: user.email, role: user.role || "user" },
     process.env.JWT_SECRET! || "70743kndslkd",
     { expiresIn: "15m" }
   );
@@ -68,12 +68,12 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: "lax",
     maxAge: 15 * 60 * 1000,
   });
 
 
-  return res.status(200).json({ success: true, message: "Login successful", user: { id: user.id, email: user.email, role: user.role } });
+  return res.status(200).json({ success: true, message: "Login successful", user: { id: user.id, email: user.email, name: user.name, role: user.role } });
 });
 
 
@@ -123,13 +123,20 @@ export const resetPassword = asyncHandler(async (req: Request, res: Response) =>
 });
 
 export const refreshToken = asyncHandler(async (req: Request, res: Response) => {
-  const { token } = req.body;
+  const { token } = req.body || {};
   if (!token) throw new AppError("Refresh token is required", 400, "MISSING_FIELD");
 
   const session = await authservice.getSessionByRefreshToken(token);
   if (!session || !session.is_active) throw new AppError("Invalid or expired session", 401, "AUTH_SESSION_INVALID");
 
-  const newAccessToken = jwt.sign({ id: session.user_id }, process.env.JWT_SECRET!, { expiresIn: "15m" });
+  const user = await authservice.getUserByIdFull(session.user_id);
+  if (!user) throw new AppError("User not found", 404, "USER_NOT_FOUND");
+
+  const newAccessToken = jwt.sign(
+    { id: session.user_id, email: user.email, role: user.role || "user" }, 
+    process.env.JWT_SECRET!, 
+    { expiresIn: "15m" }
+  );
   return res.status(200).json({ success: true, accessToken: newAccessToken });
 });
 
@@ -141,7 +148,7 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
 
 
 export const getUser = asyncHandler(async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id as string);
+  const id = req.params.id as string;
   const user = await authservice.getUserByIdFull(id);
   if (!user) throw new AppError("User not found", 404, "USER_NOT_FOUND");
   return res.status(200).json({ success: true, user });
@@ -159,7 +166,8 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
   const user = (req as any).user;
   if (!user) throw new AppError("Not authenticated", 401, "AUTH_REQUIRED");
 
-  const refreshToken = req.body.refreshToken || "";
+  // Defensive check for req.body
+  const refreshToken = req.body?.refreshToken || "";
   await authservice.logoutUserSession(user.id, refreshToken);
 
 
@@ -174,7 +182,7 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
 
 
 export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
-  const userId = parseInt(req.params.id as string);
+  const userId = req.params.id as string;
   if (!userId) throw new AppError("User ID is required", 400, "MISSING_FIELD");
 
   await authservice.deleteUserById(userId);
@@ -184,7 +192,7 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
 
 
 export const updateMe = asyncHandler(async (req: Request, res: Response) => {
-  const userId = req.body;
+  const userId = req.params.id || (req as any).user.id;
   const user = await authservice.updateUserProfile(userId, req.body);
 
   res.json({

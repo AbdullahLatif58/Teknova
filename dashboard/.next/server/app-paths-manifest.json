@@ -1,9 +1,11 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/products/page": "app/products/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
   "/categories/page": "app/categories/page.js",
-  "/variants/page": "app/variants/page.js",
+  "/users/page": "app/users/page.js",
+  "/contacts/page": "app/contacts/page.js",
+  "/logs/page": "app/logs/page.js",
+  "/subscriptions/page": "app/subscriptions/page.js",
   "/orders/page": "app/orders/page.js",
-  "/templates/page": "app/templates/page.js"
+  "/variants/page": "app/variants/page.js",
+  "/products/page": "app/products/page.js",
+  "/dashboard/page": "app/dashboard/page.js"
 }

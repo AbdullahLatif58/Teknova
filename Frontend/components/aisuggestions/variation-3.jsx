@@ -3,34 +3,30 @@ import { useTheme } from '../../context/ThemeContext';
 import { Sparkles } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import ProductCard from '../ui/ProductCard';
-import { searchAmazon } from '../../api/amazon';
+import { searchAmazon, mapAmazonProducts } from '../../api/amazon';
 
-export default function AISuggestions3({ product }) {
+export default function AISuggestions3({ product, keyword }) {
   const { variation } = useTheme();
   const [suggested, setSuggested] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!product) return;
     const fetchSuggestions = async () => {
       try {
         setLoading(true);
-        const query = product.category || product.name || 'tech gadgets';
+        let query;
+        if (keyword) {
+          query = keyword;
+        } else if (product) {
+          query = product.name || product.title || 'latest gadgets';
+        } else {
+          query = 'latest tech gadgets';
+        }
+
         const result = await searchAmazon(query, 3);
         
         if (result.success && result.data) {
-          const mapped = result.data.slice(0, 3).map(p => ({
-            id: p.asin,
-            slug: '#',
-            name: p.title,
-            price: parseFloat(p.price) || 0,
-            image: p.image_url || 'https://via.placeholder.com/600',
-            brand: 'Amazon AI Pick',
-            rating: 4.5,
-            reviewCount: Math.floor(Math.random() * 100) + 10,
-            stock: 'In Stock',
-            category: 'AI Suggestion'
-          }));
+          const mapped = mapAmazonProducts(result.data.slice(0, 3));
           setSuggested(mapped);
         } else {
           setSuggested([]);
@@ -42,7 +38,7 @@ export default function AISuggestions3({ product }) {
       }
     };
     fetchSuggestions();
-  }, [product]);
+  }, [product, keyword]);
 
   return (
     <section className={'py-20 ' + (variation === 2 ? 'bg-secondary' : 'bg-background')}>

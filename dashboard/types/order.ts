@@ -8,6 +8,9 @@ export interface OrderItem {
   discount_type?: "percentage" | "fixed" | null;
   discount_value?: number | null;
   final_price: number;
+  product_name?: string;
+  variant_sku?: string;
+  image_url?: string;
   created_at?: Date | string;
   updated_at?: Date | string;
 }

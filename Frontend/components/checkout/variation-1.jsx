@@ -5,7 +5,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { CheckCircle, Lock } from 'lucide-react';
 import { createOrder } from '../../api/orders';
 
-const STEPS = ['Shipping', 'Payment', 'Review'];
+const STEPS = ['Shipping', 'Review'];
 
 export default function Checkout1() {
   const { items, subtotal, clearCart } = useCart();
@@ -15,9 +15,27 @@ export default function Checkout1() {
   const [loading, setLoading] = useState(false);
   const getUserId = () => { if (typeof window === 'undefined') return null; return localStorage.getItem('teknova-userid'); };
   const [form, setForm] = useState({ fname:'', lname:'', email:'', address:'', city:'', zip:'', country:'', card:'', expiry:'', cvv:'' });
+  const [errors, setErrors] = useState({});
+
   useEffect(() => { if (typeof window !== 'undefined') { const settings = localStorage.getItem('teknova-settings'); if (settings) { try { const parsed = JSON.parse(settings); if (parsed.email) { setForm(prev => ({ ...prev, email: parsed.email, fname: parsed.name ? parsed.name.split(' ')[0] : '', lname: parsed.name ? parsed.name.split(' ').slice(1).join(' ') : '' })); } } catch (e) {} } } }, []);
 
-  const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
+  const validateForm = () => {
+    const newErrors = {};
+    if (!form.fname) newErrors.fname = true;
+    if (!form.lname) newErrors.lname = true;
+    if (!form.email) newErrors.email = true;
+    if (!form.address) newErrors.address = true;
+    if (!form.city) newErrors.city = true;
+    if (!form.zip) newErrors.zip = true;
+    if (!form.country) newErrors.country = true;
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const set = (k, v) => {
+    setForm(p => ({ ...p, [k]: v }));
+    if (errors[k]) setErrors(p => ({ ...p, [k]: false }));
+  };
   const tax = subtotal * 0.08;
   const total = subtotal + tax;
 
@@ -60,42 +78,22 @@ export default function Checkout1() {
             <div className="bg-card border border-border rounded-2xl p-6">
               <h2 className="font-heading font-bold text-foreground mb-6">Shipping Information</h2>
               <div className="grid grid-cols-2 gap-4">
-                <input value={form.fname} onChange={e => set('fname', e.target.value)} placeholder="First Name" className={inputCls} />
-                <input value={form.lname} onChange={e => set('lname', e.target.value)} placeholder="Last Name" className={inputCls} />
-                <input value={form.email} onChange={e => set('email', e.target.value)} placeholder="Email" type="email" className={inputCls + ' col-span-2'} />
-                <input value={form.address} onChange={e => set('address', e.target.value)} placeholder="Address" className={inputCls + ' col-span-2'} />
-                <input value={form.city} onChange={e => set('city', e.target.value)} placeholder="City" className={inputCls} />
-                <input value={form.zip} onChange={e => set('zip', e.target.value)} placeholder="ZIP Code" className={inputCls} />
-                <input value={form.country} onChange={e => set('country', e.target.value)} placeholder="Country" className={inputCls + ' col-span-2'} />
+                <input value={form.fname} onChange={e => set('fname', e.target.value)} placeholder="First Name" className={inputCls + (errors.fname ? ' border-rose-500 bg-rose-500/5' : '')} />
+                <input value={form.lname} onChange={e => set('lname', e.target.value)} placeholder="Last Name" className={inputCls + (errors.lname ? ' border-rose-500 bg-rose-500/5' : '')} />
+                <input value={form.email} onChange={e => set('email', e.target.value)} placeholder="Email" type="email" className={inputCls + ' col-span-2' + (errors.email ? ' border-rose-500 bg-rose-500/5' : '')} />
+                <input value={form.address} onChange={e => set('address', e.target.value)} placeholder="Address" className={inputCls + ' col-span-2' + (errors.address ? ' border-rose-500 bg-rose-500/5' : '')} />
+                <input value={form.city} onChange={e => set('city', e.target.value)} placeholder="City" className={inputCls + (errors.city ? ' border-rose-500 bg-rose-500/5' : '')} />
+                <input value={form.zip} onChange={e => set('zip', e.target.value)} placeholder="ZIP Code" className={inputCls + (errors.zip ? ' border-rose-500 bg-rose-500/5' : '')} />
+                <input value={form.country} onChange={e => set('country', e.target.value)} placeholder="Country" className={inputCls + ' col-span-2' + (errors.country ? ' border-rose-500 bg-rose-500/5' : '')} />
               </div>
-              <button onClick={() => setStep(1)} className={btnCls + ' mt-6'}>Continue to Payment</button>
+              <button onClick={() => validateForm() && setStep(1)} className={btnCls + ' mt-6'}>Continue to Review</button>
             </div>
           )}
 
-          {/* STEP 1 - Payment */}
+
+
+          {/* STEP 1 - Review */}
           {step === 1 && (
-            <div className="bg-card border border-border rounded-2xl p-6">
-              <h2 className="font-heading font-bold text-foreground mb-6 flex items-center gap-2"><Lock size={18} className="text-green-500" /> Payment Details</h2>
-              <div className="space-y-4">
-                <input value={form.card} onChange={e => set('card', e.target.value)} placeholder="Card Number (1234 5678 9012 3456)" className={inputCls} />
-                <div className="grid grid-cols-2 gap-4">
-                  <input value={form.expiry} onChange={e => set('expiry', e.target.value)} placeholder="MM/YY" className={inputCls} />
-                  <input value={form.cvv} onChange={e => set('cvv', e.target.value)} placeholder="CVV" className={inputCls} />
-                </div>
-                <div className="flex items-center gap-2 p-3 bg-green-500/5 border border-green-500/20 rounded-xl">
-                  <Lock size={14} className="text-green-500" />
-                  <span className="text-xs text-green-600">Your payment info is encrypted and secure.</span>
-                </div>
-              </div>
-              <div className="flex gap-3 mt-6">
-                <button onClick={() => setStep(0)} className="flex-1 border border-border text-foreground py-3.5 rounded-xl hover:bg-secondary transition-colors">Back</button>
-                <button onClick={() => setStep(2)} className={'flex-1 ' + btnCls}>Review Order</button>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 2 - Review */}
-          {step === 2 && (
             <div className="bg-card border border-border rounded-2xl p-6">
               <h2 className="font-heading font-bold text-foreground mb-6">Review Order</h2>
               <div className="space-y-3 mb-6">
@@ -108,7 +106,7 @@ export default function Checkout1() {
                 ))}
               </div>
               <div className="flex gap-3">
-                <button onClick={() => setStep(1)} className="flex-1 border border-border text-foreground py-3.5 rounded-xl hover:bg-secondary transition-colors">Back</button>
+                <button onClick={() => setStep(0)} className="flex-1 border border-border text-foreground py-3.5 rounded-xl hover:bg-secondary transition-colors">Back</button>
                 <button 
                   onClick={async () => { 
                     setLoading(true);
@@ -149,11 +147,15 @@ export default function Checkout1() {
         {/* Summary */}
         <div className="bg-card border border-border rounded-2xl p-6 h-fit">
           <h3 className="font-heading font-bold text-foreground mb-4">Order Summary</h3>
-          <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
+          <div className="space-y-4 mb-4 max-h-[400px] overflow-y-auto pr-2">
             {items.map(item => (
-              <div key={item.id} className="flex justify-between text-sm">
-                <span className="text-muted-foreground truncate max-w-[65%]">{item.name} x{item.quantity}</span>
-                <span className="text-foreground">${(item.price * item.quantity).toFixed(2)}</span>
+              <div key={item.id} className="flex gap-3">
+                <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover bg-secondary" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-foreground truncate">{item.name}</p>
+                  <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Qty: {item.quantity}</p>
+                  <p className="text-xs font-black text-foreground mt-0.5">${(item.price * item.quantity).toFixed(2)}</p>
+                </div>
               </div>
             ))}
           </div>

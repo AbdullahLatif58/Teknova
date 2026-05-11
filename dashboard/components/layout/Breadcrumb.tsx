@@ -17,14 +17,14 @@ interface BreadcrumbProps {
 const Breadcrumb = ({ items }: BreadcrumbProps) => {
   const router = useRouter();
   return (
-    <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 mb-6">
-      <button onClick={() => router.push('/dashboard')} className="hover:text-violet-400 transition-colors uppercase tracking-widest">Dashboard</button>
+    <div className="flex items-center gap-2 text-[10px] font-black text-zinc-500 mb-6 uppercase tracking-[0.1em]">
+      <button onClick={() => router.push('/dashboard')} className="hover:text-violet-500 transition-colors">Dashboard</button>
       {items.map((item, i) => (
         <React.Fragment key={i}>
-          <ChevronRight size={14} className="text-zinc-800" />
+          <ChevronRight size={12} className="text-zinc-300 dark:text-zinc-800" />
           <button
             onClick={() => router.push(item.href ? item.href : `/${item.id}`)}
-            className={`uppercase tracking-widest transition-colors ${i === items.length - 1 ? 'text-zinc-200' : 'hover:text-violet-400'}`}
+            className={`transition-colors ${i === items.length - 1 ? 'text-zinc-900 dark:text-zinc-200' : 'hover:text-violet-500'}`}
           >
             {item.label}
           </button>

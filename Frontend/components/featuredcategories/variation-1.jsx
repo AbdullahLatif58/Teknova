@@ -23,9 +23,12 @@ export default function FeaturedCategories1() {
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const result = await getCategories();
-        if (result && result.data) {
-          setCategories(result.data || []);
+        const data = await getCategories();
+        // data is now the array due to our API helper unwrapping
+        if (Array.isArray(data)) {
+          setCategories(data);
+        } else if (data && data.success && data.data) {
+          setCategories(data.data);
         }
       } catch (err) {
         console.error(err);
@@ -52,7 +55,7 @@ export default function FeaturedCategories1() {
               <Link key={cat.id} href={'/products?category=' + encodeURIComponent(cat.name)}
                 className={'group relative overflow-hidden rounded-xl border border-border hover:border-neon/50 transition-all duration-300 block ' + (i === 0 ? 'md:row-span-2' : '')}>
                 <div className={(i === 0 ? 'aspect-square md:aspect-auto md:h-full' : 'aspect-video') + ' relative'}>
-                  <img src={cat.image_url || 'https://via.placeholder.com/400'} alt={cat.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src={cat.image_url || 'https://placehold.co/400x400'} alt={cat.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
                   <div className="absolute bottom-4 left-4 flex items-center gap-2">
                     <Icon size={18} className="text-neon" />
@@ -79,7 +82,7 @@ export default function FeaturedCategories1() {
             <div key={cat.id} className="snap-start shrink-0 w-64">
               <Link href={'/products?category=' + encodeURIComponent(cat.name)} className="group block">
                 <div className="relative aspect-[3/4] rounded-xl overflow-hidden mb-4 glow-warm">
-                  <img src={cat.image_url || 'https://via.placeholder.com/400'} alt={cat.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <img src={cat.image_url || 'https://placehold.co/400x400'} alt={cat.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-2xl font-heading text-muted-foreground/30 font-bold">{String(i + 1).padStart(2,'0')}</span>

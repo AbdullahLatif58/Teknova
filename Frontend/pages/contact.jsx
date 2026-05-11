@@ -2,7 +2,8 @@ import { useState } from 'react';
 import Head from 'next/head';
 import Layout from '../components/Layout';
 import { useTheme } from '../context/ThemeContext';
-import { Mail, Phone, MapPin, Send, MessageSquare, Clock, CheckCircle } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, MessageSquare, Clock, CheckCircle, Loader2 } from 'lucide-react';
+import { submitContact } from '../api/contacts';
 
 const CONTACT_INFO = [
   { icon: Mail,    label: 'Email',    value: 'support@teknova.com',    sub: 'We reply within 24 hours' },
@@ -17,6 +18,9 @@ export default function ContactPage() {
   const { variation } = useTheme();
   const [form, setForm] = useState({ name: '', email: '', topic: '', message: '' });
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  
   const setF = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
   const accentCls = variation === 2 ? 'text-neon' : 'text-primary';
@@ -25,9 +29,31 @@ export default function ContactPage() {
     : 'bg-primary text-primary-foreground';
   const inputCls  = 'w-full bg-secondary border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors';
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (form.name && form.email && form.message) setSent(true);
+    setError('');
+    
+    if (!form.name || !form.email || !form.message) return;
+    
+    try {
+      setLoading(true);
+      const res = await submitContact({
+        name: form.name,
+        email: form.email,
+        subject: form.topic,
+        message: form.message
+      });
+      
+      if (res.success) {
+        setSent(true);
+      } else {
+        setError(res.message || "Something went wrong.");
+      }
+    } catch (err) {
+      setError("Connection failed. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -117,8 +143,19 @@ export default function ContactPage() {
                         placeholder="Tell us how we can help..." className={inputCls + ' resize-none'} />
                     </div>
 
-                    <button type="submit" className={'w-full py-3.5 rounded-xl font-medium flex items-center justify-center gap-2 ' + accentBg}>
-                      <Send size={16} /> Send Message
+                    {error && (
+                      <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-500 text-sm font-medium">
+                        {error}
+                      </div>
+                    )}
+
+                    <button 
+                      type="submit" 
+                      disabled={loading}
+                      className={'w-full py-3.5 rounded-xl font-medium flex items-center justify-center gap-2 transition-all ' + accentBg + (loading ? ' opacity-70 cursor-not-allowed' : '')}
+                    >
+                      {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />} 
+                      {loading ? 'Sending...' : 'Send Message'}
                     </button>
 
                     <p className="text-xs text-muted-foreground text-center">

@@ -6,10 +6,8 @@ import { createClient } from 'redis';
 
 
 const connectionOptions = {
-  socket: {
-    host: env.REDIS.HOST,
-    port: env.REDIS.PORT,
-  },
+  host: env.REDIS.HOST,
+  port: env.REDIS.PORT,
   password: env.REDIS.PASSWORD || undefined,
 };
 
@@ -17,14 +15,21 @@ const connectionOptions = {
 const worker = new Worker(
   emailQueueName,
   async (job) => {
+    console.log(`[EmailWorker] Processing job ${job.id} of type ${job.name}`);
     await sendEmail(job.data);
   },
   { connection: connectionOptions }
 );
 
+console.log(`✅ Email Worker started for queue: ${emailQueueName}`);
+
 worker.on('completed', (job) =>
-  console.log(` Email job completed: ${job.id}`)
+  console.log(`[EmailWorker] SUCCESS: Job ${job.id} completed`)
 );
-worker.on('failed', (job, err) =>
-  console.log(`Email job failed: ${job?.id}`, err)
-);
+worker.on('failed', (job, err) => {
+  console.error(`[EmailWorker] FAILED: Job ${job?.id} failed with error:`, err);
+});
+
+worker.on('error', (err) => {
+  console.error(`[EmailWorker] CRITICAL ERROR:`, err);
+});

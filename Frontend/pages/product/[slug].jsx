@@ -29,13 +29,28 @@ const relatedMap = { 1: RelatedProducts1, 2: RelatedProducts2, 3: RelatedProduct
 
 const SPEC_TABS = ['Description', 'Specifications', 'Reviews'];
 
+// Helper to extract a single clean URL from any image field
+function optimizeImage(images) {
+  if (!images) return 'https://placehold.co/600x600';
+  try {
+    const parsed = typeof images === 'string' ? JSON.parse(images) : images;
+    const url = Array.isArray(parsed) ? parsed[0] : (typeof parsed === 'string' ? parsed : null);
+    if (!url) return 'https://placehold.co/600x600';
+    return url;
+  } catch (e) {
+    if (typeof images === 'string') return images;
+    if (Array.isArray(images) && images[0]) return images[0];
+    return 'https://placehold.co/600x600';
+  }
+}
+
 export default function ProductDetailPage() {
   const router = useRouter();
   const { slug } = router.query;
   const { variation } = useTheme();
   const [activeTab, setActiveTab] = useState('Description');
-  const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [product, setProduct] = useState(null);
+  const [activeVariant, setActiveVariant] = useState(null);
   const [related, setRelated] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -48,9 +63,9 @@ export default function ProductDetailPage() {
         // Fetch categories for name mapping
         const catData = await getCategories();
         const catMap = {};
-        if (catData.success && catData.data) {
-          catData.data.forEach(c => { catMap[c.id] = c.name; });
-        }
+        // catData is now the array due to unwrapping
+        const cats = Array.isArray(catData) ? catData : (catData.data || []);
+        cats.forEach(c => { catMap[c.id] = c.name; });
 
         const p = await getProductBySlug(slug);
         if (!p || p.message) {
@@ -58,64 +73,43 @@ export default function ProductDetailPage() {
           return;
         }
 
-        // Extract colors and sizes from variants
+        // Extract colors and sizes from ALL variants
         const allVariants = [p.defaultVariant, ...(p.variants || [])].filter(Boolean);
         const colorsSet = new Set();
         const sizesSet = new Set();
-        for (const v of allVariants) {
-          const specs = v.specifications
-            ? (typeof v.specifications === 'string' ? JSON.parse(v.specifications) : v.specifications)
-            : {};
-          if (specs.color) colorsSet.add(specs.color);
-          if (specs.sizes && Array.isArray(specs.sizes)) {
-            specs.sizes.forEach(s => sizesSet.add(s));
-          }
-        }
+        
+        allVariants.forEach(v => {
+           const specs = v.specifications ? (typeof v.specifications === 'string' ? JSON.parse(v.specifications) : v.specifications) : {};
+           if (specs.color) colorsSet.add(specs.color);
+           if (specs.size) sizesSet.add(specs.size);
+           if (specs.sizes && Array.isArray(specs.sizes)) specs.sizes.forEach(s => sizesSet.add(s));
+        });
 
         const mapped = {
-          id: p.id,
-          slug: p.page_handle,
-          name: p.title,
-          brand: 'Teknova',
-          category: catMap[p.category_id] || 'Other',
-          price: Number(p.price),
-          compareAt: null,
-          rating: p.popularity ? 4.5 : 4.0,
-          reviewCount: 15,
-          image: p.images && p.images[0] ? (typeof p.images === 'string' ? JSON.parse(p.images)[0] : p.images[0]) : 'https://via.placeholder.com/600',
-          images: p.images ? (typeof p.images === 'string' ? JSON.parse(p.images) : p.images) : [],
-          stock: p.total_stock > 0 ? 'In Stock' : 'Out of Stock',
-          new: false,
-          featured: p.is_featured === 1,
-          description: p.description || 'No description available.',
-          longDescription: p.description || 'No detailed description available.',
-          specs: p.defaultVariant?.specifications
-            ? (typeof p.defaultVariant.specifications === 'string' ? JSON.parse(p.defaultVariant.specifications) : p.defaultVariant.specifications)
-            : {},
-          colors: [...colorsSet],
-          sizes: [...sizesSet],
-          tags: p.tags ? (typeof p.tags === 'string' ? JSON.parse(p.tags) : p.tags) : []
+          ...p,
+          categoryName: catMap[p.category_id] || 'Other',
+          allColors: [...colorsSet],
+          allSizes: [...sizesSet],
+          allVariants: allVariants
         };
+        
         setProduct(mapped);
+        setActiveVariant(p.defaultVariant || allVariants[0]);
 
         // Fetch related by category
         if (p.category_id) {
           const relData = await getProductsByCategory(p.category_id);
           if (relData && Array.isArray(relData)) {
-            const mappedCat = relData.filter(rp => rp.id !== p.id).map(rp => ({
+            const mappedRel = relData.filter(rp => rp.id !== p.id).map(rp => ({
               id: rp.id,
               slug: rp.page_handle,
               name: rp.title,
               brand: 'Teknova',
               category: catMap[rp.category_id] || 'Other',
               price: Number(rp.price),
-              compareAt: null,
-              rating: rp.popularity ? 4.5 : 4.0,
-              reviewCount: 0,
-              image: rp.images && rp.images[0] ? (typeof rp.images === 'string' ? JSON.parse(rp.images)[0] : rp.images[0]) : 'https://via.placeholder.com/600',
-              images: rp.images ? (typeof rp.images === 'string' ? JSON.parse(rp.images) : rp.images) : [],
+              image: optimizeImage(rp.images),
             }));
-            setRelated(mappedCat);
+            setRelated(mappedRel);
           }
         }
       } catch (err) {
@@ -127,35 +121,62 @@ export default function ProductDetailPage() {
     fetchProduct();
   }, [slug]);
 
+  if (loading) return (
+    <Layout><div className="pt-32 text-center text-muted-foreground">Loading product...</div></Layout>
+  );
+
+  if (!product) return (
+    <Layout><div className="pt-32 text-center"><p className="text-muted-foreground">Product not found.</p></div></Layout>
+  );
+
   const AI = aiMap[variation] || AISuggestions1;
   const Gallery = galleryMap[variation] || ImageGallery1;
   const Info = infoMap[variation] || ProductInfo1;
   const Related = relatedMap[variation] || RelatedProducts1;
 
-  // Track recently viewed
-  useEffect(() => {
-    if (!product) return;
-    const key = 'teknova-recently-viewed';
-    const stored = JSON.parse(localStorage.getItem(key) || '[]');
-    const updated = [product.id, ...stored.filter(id => id !== product.id)].slice(0, 5);
-    localStorage.setItem(key, JSON.stringify(updated));
-    // Not fetching full data for recently viewed for now, just storing ids
-  }, [product]);
+  // Prepare display product merged with active variant
+  const displayProduct = {
+    id: product.id,
+    name: product.title,
+    brand: 'Teknova',
+    category: product.categoryName,
+    price: Number(activeVariant?.price || product.price),
+    rating: 4.5,
+    reviewCount: 15,
+    image: (() => {
+      // Try variant image_url first (it can be a JSON array or plain string)
+      if (activeVariant?.image_url) {
+        return optimizeImage(activeVariant.image_url);
+      }
+      // Fall back to product images array
+      return optimizeImage(product.images);
+    })(),
+    images: (() => {
+      if (!product.images) return [];
+      try {
+        const parsed = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
+        return Array.isArray(parsed) ? parsed : [product.images];
+      } catch (e) {
+        return [product.images];
+      }
+    })(),
+    stock: (activeVariant?.stock_quantity || product.total_stock) > 0 ? 'In Stock' : 'Out of Stock',
+    description: product.description,
+    colors: product.allColors,
+    sizes: product.allSizes,
+    specs: activeVariant?.specifications ? (typeof activeVariant.specifications === 'string' ? JSON.parse(activeVariant.specifications) : activeVariant.specifications) : {},
+    variants: product.allVariants
+  };
 
-  if (loading) return (
-    <Layout>
-      <div className="pt-32 text-center text-muted-foreground">Loading product...</div>
-    </Layout>
-  );
-
-  if (!product) return (
-    <Layout>
-      <div className="pt-32 text-center">
-        <p className="text-muted-foreground">Product not found.</p>
-        <Link href="/products" className="text-primary hover:underline mt-4 inline-block">← Back to Products</Link>
-      </div>
-    </Layout>
-  );
+  const handleVariantChange = (color, size) => {
+    const found = product.allVariants.find(v => {
+      const vSpecs = v.specifications ? (typeof v.specifications === 'string' ? JSON.parse(v.specifications) : v.specifications) : {};
+      const matchColor = !color || vSpecs.color === color;
+      const matchSize = !size || vSpecs.size === size || (vSpecs.sizes && vSpecs.sizes.includes(size));
+      return matchColor && matchSize;
+    });
+    if (found) setActiveVariant(found);
+  };
 
   const tabCls = (t) => `px-4 py-2.5 text-sm font-medium transition-colors border-b-2 ${activeTab === t
     ? (variation === 2 ? 'border-neon text-neon' : 'border-primary text-foreground')
@@ -164,80 +185,48 @@ export default function ProductDetailPage() {
   return (
     <>
       <Head>
-        <title>{product.name} — Teknova</title>
-        <meta name="description" content={product.description} />
+        <title>{displayProduct.name} — Teknova</title>
       </Head>
       <Layout>
         <div className="pt-24 pb-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-            {/* Breadcrumb */}
             <nav className="flex items-center gap-1.5 text-xs text-muted-foreground mb-8">
-              <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
-              <ChevronRight size={12} />
-              <Link href="/products" className="hover:text-foreground transition-colors">Products</Link>
-              <ChevronRight size={12} />
-              <Link href={`/products?category=${product.category}`} className="hover:text-foreground transition-colors">{product.category}</Link>
-              <ChevronRight size={12} />
-              <span className="text-foreground truncate max-w-[200px]">{product.name}</span>
+              <Link href="/">Home</Link><ChevronRight size={12} />
+              <Link href="/products">Products</Link><ChevronRight size={12} />
+              <span className="text-foreground truncate">{displayProduct.name}</span>
             </nav>
 
-            {/* Main grid: gallery + info */}
             <div className="grid lg:grid-cols-2 gap-12 mb-16">
-              <Gallery images={product.images.length > 0 ? product.images : [product.image]} alt={product.name} />
-              <Info product={product} />
+              <Gallery images={displayProduct.images.length > 0 ? displayProduct.images : [displayProduct.image]} alt={displayProduct.name} />
+              <Info product={displayProduct} onVariantChange={handleVariantChange} />
             </div>
 
-            {/* Tabs: Description / Specifications / Reviews */}
             <div className="border-b border-border mb-8">
               <div className="flex gap-0">
-                {SPEC_TABS.map(t => (
-                  <button key={t} onClick={() => setActiveTab(t)} className={tabCls(t)}>{t}</button>
-                ))}
+                {SPEC_TABS.map(t => <button key={t} onClick={() => setActiveTab(t)} className={tabCls(t)}>{t}</button>)}
               </div>
             </div>
 
             <div className="mb-16 max-w-3xl">
-              {activeTab === 'Description' && (
-                <div>
-                  <p className="text-muted-foreground leading-relaxed mb-4">{product.longDescription || product.description}</p>
-                </div>
-              )}
-              {activeTab === 'Specifications' && product.specs && (
+              {activeTab === 'Description' && <p className="text-muted-foreground leading-relaxed">{displayProduct.description}</p>}
+              {activeTab === 'Specifications' && displayProduct.specs && (
                 <div className="grid sm:grid-cols-2 gap-3">
-                  {Object.entries(product.specs).map(([k, v]) => (
+                  {Object.entries(displayProduct.specs).map(([k, v]) => (
                     <div key={k} className="flex justify-between py-2.5 border-b border-border text-sm">
                       <span className="text-muted-foreground font-medium">{k}</span>
-                      <span className="text-foreground text-right max-w-[55%]">{v}</span>
+                      <span className="text-foreground text-right">{String(v)}</span>
                     </div>
                   ))}
                 </div>
               )}
-              {activeTab === 'Reviews' && <ReviewsRatings product={product} />}
+              {activeTab === 'Reviews' && <ReviewsRatings product={displayProduct} />}
             </div>
 
-            {/* Related Products Section */}
-            <Related products={[]} currentId={product.id} />
-
-            {/* AI Suggestions */}
-            {product && <AI product={product} />}
-
-            {/* Recently Viewed */}
-            {recentlyViewed.length > 0 && (
-              <section className="py-12">
-                <h2 className={'font-heading text-2xl font-bold text-foreground mb-8 ' + (variation === 3 ? 'italic' : '')}>
-                  {variation === 2 ? <span className="text-gradient-neon">Recently Viewed</span> : 'Recently Viewed'}
-                </h2>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                  {recentlyViewed.slice(0, 4).map(p => <ProductCard key={p.id} product={p} />)}
-                </div>
-              </section>
-            )}
-
+            <Related products={related} currentId={displayProduct.id} />
+            <AI product={displayProduct} />
           </div>
         </div>
       </Layout>
     </>
   );
 }
-

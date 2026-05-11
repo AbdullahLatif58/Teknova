@@ -14,12 +14,14 @@ import {
 } from "./auth.controller";
 import { body } from "express-validator";
 import { validate } from "../../utils/validation";
+import { authenticateToken } from "./auth.middleware";
+import { authorizeAdmin } from "./admin.middleware";
 
 const router = Router();
 
-router.get("/users", listUsers);        
-router.get("/users/:id", getUser);    
-router.get("/me",getProfile);           
+router.get("/users", authenticateToken, authorizeAdmin, listUsers);
+router.get("/users/:id", authenticateToken, authorizeAdmin, getUser);
+router.get("/me", authenticateToken, getProfile);
 
 
 router.post(
@@ -50,11 +52,12 @@ router.post("/password-reset/:token", resetPassword);
 
 router.post("/refresh-token", refreshToken);
 
-router.post("/logout", logout);
+router.post("/logout", authenticateToken, logout);
 
-router.delete("/users/:id", deleteUser);
+router.delete("/users/:id", authenticateToken, authorizeAdmin, deleteUser);
 
-router.patch("/me", updateMe);
+router.patch("/me", authenticateToken, updateMe);
+router.patch("/users/:id", authenticateToken, authorizeAdmin, updateMe); // Reusing updateMe logic but with ID param if provided
 
 
 

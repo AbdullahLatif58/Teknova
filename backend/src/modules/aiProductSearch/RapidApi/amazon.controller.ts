@@ -21,6 +21,7 @@ export async function getProductsWithDetails(req: Request, res: Response) {
     const searchResult = await searchProducts(params);
 
     if (!searchResult.success) {
+      console.error('[AMAZON SEARCH ERROR]', searchResult);
       return res.status(502).json(searchResult);
     }
 

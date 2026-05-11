@@ -6,6 +6,16 @@ import { uploadToCloudinary, deleteFromCloudinary, getPublicIdFromUrl } from "..
 
 
 
+const safeJsonParse = (data: any, fallback: any = []) => {
+  if (!data) return fallback;
+  if (typeof data === 'object') return data;
+  try {
+    return JSON.parse(data);
+  } catch (e) {
+    return fallback;
+  }
+};
+
 async function checkStockAvailability(product_id: string, additionalStock: number, excludeVariantId?: string) {
   const [productRows] = await pool.query("SELECT total_stock FROM products WHERE id = ?", [product_id]);
   if ((productRows as any[]).length === 0) throw new Error("Product not found");
@@ -40,7 +50,7 @@ export async function createVariant(
     specifications,
   } = variantData;
 
-  await checkStockAvailability(product_id, stock || 0);
+  // await checkStockAvailability(product_id, stock || 0);
 
 
   let uploadedImages: string[] = [];
@@ -106,8 +116,8 @@ export async function getVariantsByProduct(product_id: string): Promise<ProductV
 
   return (rows as any[]).map((row) => ({
     ...row,
-    image_url: row.image_url ? JSON.parse(row.image_url) : [],
-    specifications: row.specifications ? JSON.parse(row.specifications) : null,
+    image_url: safeJsonParse(row.image_url),
+    specifications: safeJsonParse(row.specifications, null),
   })) as ProductVariant[];
 }
 
@@ -121,9 +131,11 @@ export async function updateVariant(
   const variant = (rows as any[])[0];
   if (!variant) throw new Error("Variant not found");
 
+/*
   if (data.stock !== undefined) {
     await checkStockAvailability(variant.product_id, data.stock, id);
   }
+*/
 
 
   let oldImages: string[] = [];
@@ -144,8 +156,10 @@ export async function updateVariant(
     const fields: string[] = [];
     const values: any[] = [];
 
+    const validColumns = ["product_id", "price", "sku", "stock", "image_url", "is_default", "is_active", "specifications"];
+
     for (const key in data) {
-      if (key !== "id") {
+      if (validColumns.includes(key)) {
         fields.push(`${key} = ?`);
         if (key === "specifications" && data[key]) {
           values.push(typeof data[key] === "object" ? JSON.stringify(data[key]) : data[key]);
@@ -222,9 +236,11 @@ export async function createBulkVariants(variantsData: ProductVariant[]): Promis
     productStockMap.set(v.product_id, (productStockMap.get(v.product_id) || 0) + (v.stock || 0));
   }
 
+/*
   for (const [productId, additionalStock] of productStockMap.entries()) {
     await checkStockAvailability(productId, additionalStock);
   }
+*/
 
   for (const variant of variantsData) {
     const id = generateUUID();

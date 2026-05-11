@@ -1,19 +1,17 @@
 import { pool } from "../../config/db";
 
 export async function getDashboardSummary() {
-  // Total Revenue (completed orders)
-  const [revRows]: any = await pool.query(
-    `SELECT SUM(total_amount) as total_revenue FROM orders WHERE status = 'completed'`
-  );
+  const [revResult, orderResult, productResult, userResult]: any = await Promise.all([
+    pool.query(`SELECT SUM(total_amount) as total_revenue FROM orders WHERE status = 'completed'`),
+    pool.query(`SELECT COUNT(*) as total_orders FROM orders`),
+    pool.query(`SELECT COUNT(*) as active_products FROM products WHERE is_active = 1`),
+    pool.query(`SELECT COUNT(*) as total_users FROM users`)
+  ]);
 
-  // Total Orders
-  const [orderRows]: any = await pool.query(`SELECT COUNT(*) as total_orders FROM orders`);
-
-  // Active Products
-  const [productRows]: any = await pool.query(`SELECT COUNT(*) as active_products FROM products WHERE is_active = 1`);
-
-  // Total Users
-  const [userRows]: any = await pool.query(`SELECT COUNT(*) as total_users FROM users`);
+  const revRows = revResult[0];
+  const orderRows = orderResult[0];
+  const productRows = productResult[0];
+  const userRows = userResult[0];
 
   return {
     totalRevenue: revRows[0]?.total_revenue || 0,
@@ -35,8 +33,6 @@ export async function getRecentOrders(limit: number = 5) {
 }
 
 export async function getSalesChartData(days: number = 7) {
-  // We group by DATE(created_at)
-  // For MySQL, we can use DATE() function
   const [rows] = await pool.query(
     `SELECT DATE(created_at) as date, SUM(total_amount) as revenue 
      FROM orders 

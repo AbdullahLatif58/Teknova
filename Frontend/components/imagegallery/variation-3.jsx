@@ -7,11 +7,27 @@ export default function ImageGallery({ images = [], alt = '' }) {
   const [zoom, setZoom] = useState(false);
 
   const optimizeImage = (url, width = 800) => {
-    if (!url) return 'https://via.placeholder.com/800';
-    if (url.includes('cloudinary.com')) {
-      return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width}/`);
+    if (!url) return 'https://placehold.co/800x800';
+    
+    let singleUrl = url;
+    if (Array.isArray(url)) {
+      singleUrl = url[0];
+    } else if (typeof url === 'string' && (url.includes(',') || url.includes('['))) {
+      try {
+        const parsed = typeof url === 'string' ? JSON.parse(url) : url;
+        if (Array.isArray(parsed)) singleUrl = parsed[0];
+        else if (typeof url === 'string' && url.includes(',')) singleUrl = url.split(',')[0];
+      } catch (e) {
+        if (typeof url === 'string' && url.includes(',')) singleUrl = url.split(',')[0];
+      }
     }
-    return url;
+
+    if (typeof singleUrl !== 'string') return 'https://placehold.co/800x800';
+
+    if (singleUrl.includes('cloudinary.com')) {
+      return singleUrl.replace('/upload/', `/upload/f_auto,q_auto,w_${width}/`);
+    }
+    return singleUrl;
   };
 
   const prev = () => setActive(i => (i - 1 + images.length) % images.length);

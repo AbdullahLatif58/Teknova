@@ -40,9 +40,12 @@ export default function ProductsPage() {
   useEffect(() => {
     const fetchCats = async () => {
       try {
-        const catData = await getCategories();
-        if (catData.success && catData.data) {
-          setCatList(catData.data);
+        const data = await getCategories();
+        // data is now the array due to our API helper unwrapping
+        if (Array.isArray(data)) {
+          setCatList(data);
+        } else if (data && data.success && data.data) {
+          setCatList(data.data);
         }
       } catch (err) {
         console.error('Failed to fetch categories', err);
@@ -78,8 +81,7 @@ export default function ProductsPage() {
         } else if (sort === 'newest') {
           data = await getNewProducts();
         } else {
-          const res = await getProducts(100);
-          data = res.products;
+          data = await getProducts(100);
         }
 
         if (data) {
@@ -95,7 +97,7 @@ export default function ProductsPage() {
             compareAt: null,
             rating: p.popularity ? 4.5 : 4.0,
             reviewCount: 0,
-            image: p.images && p.images[0] ? (typeof p.images === 'string' ? JSON.parse(p.images)[0] : p.images[0]) : 'https://via.placeholder.com/600',
+            image: p.images && p.images[0] ? (typeof p.images === 'string' ? JSON.parse(p.images)[0] : p.images[0]) : 'https://placehold.co/600x600',
             images: p.images ? (typeof p.images === 'string' ? JSON.parse(p.images) : p.images) : [],
             stock: p.total_stock > 0 ? 'In Stock' : 'Out of Stock',
             new: false,

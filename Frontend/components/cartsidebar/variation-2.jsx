@@ -36,8 +36,13 @@ export default function CartSidebar() {
           <>
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {items.map(item => (
-                <div key={item.id} className="flex gap-4 p-3 bg-secondary rounded-xl">
-                  <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-lg" />
+                <div key={`${item.id}-${item.color || 'default'}`} className="flex gap-4 p-3 bg-secondary rounded-xl">
+                  <img 
+                    src={item.image} 
+                    alt={item.name} 
+                    className="w-20 h-20 object-cover rounded-lg"
+                    onError={(e) => { e.target.src = 'https://placehold.co/600x600'; }}
+                  />
                   <div className="flex-1 min-w-0">
                     <h4 className="font-heading font-semibold text-sm text-foreground truncate">{item.name}</h4>
                     {item.color && <p className="text-xs text-muted-foreground">{item.color}</p>}

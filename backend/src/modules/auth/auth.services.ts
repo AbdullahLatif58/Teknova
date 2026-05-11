@@ -12,7 +12,7 @@ export async function getUserByEmail(email: string): Promise<User | null> {
 }
 
 
-export async function getUserById(id: number): Promise<User | null> {
+export async function getUserById(id: string): Promise<User | null> {
   const [rows]: any = await pool.query("SELECT * FROM users WHERE id = ?", [id]);
   return rows[0] || null;
 }
@@ -27,13 +27,13 @@ export async function createUser(data: {
   const id = generateUUID();
   await pool.query(
     "INSERT INTO users (id, name, email, password_hash, role, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 1, NOW(), NOW())",
-    [id, data.name, data.email, data.password_hash, data.role || "user"] // <- 5 values match placeholders
+    [id, data.name, data.email, data.password_hash, data.role || "user"]
   );
   return id;
 }
 
 
-export async function updateUserPassword(userId: number, password_hash: string): Promise<void> {
+export async function updateUserPassword(userId: string, password_hash: string): Promise<void> {
   await pool.query(
     "UPDATE users SET password_hash = ?, updated_at = NOW() WHERE id = ?",
     [password_hash, userId]
@@ -42,18 +42,18 @@ export async function updateUserPassword(userId: number, password_hash: string):
 
 
 export async function createPasswordReset(data: {
-  user_id: number;
+  user_id: string;
   reset_token: string;
   expires_at: Date;
   used: boolean;
-}): Promise<number> {
+}): Promise<string> {
   const id = generateUUID();
 
-  const [result]: any = await pool.query(
-    "INSERT INTO password_resets (id,user_id, reset_token, expires_at, used, created_at) VALUES (?,?, ?, ?, ?, NOW())",
-    [id,data.user_id, data.reset_token, data.expires_at, data.used ? 1 : 0]
+  await pool.query(
+    "INSERT INTO password_resets (id, user_id, reset_token, expires_at, used, created_at) VALUES (?, ?, ?, ?, ?, NOW())",
+    [id, data.user_id, data.reset_token, data.expires_at, data.used ? 1 : 0]
   );
-  return result.insertId;
+  return id;
 }
 
 
@@ -70,7 +70,7 @@ export async function getPasswordResetByToken(token: string): Promise<PasswordRe
 }
 
 
-export async function markPasswordResetUsed(id: number): Promise<void> {
+export async function markPasswordResetUsed(id: string): Promise<void> {
   await pool.query(
     "UPDATE password_resets SET used = 1 WHERE id = ?",
     [id]
@@ -79,22 +79,22 @@ export async function markPasswordResetUsed(id: number): Promise<void> {
 
 
 export async function createUserSession(data: {
-  user_id: number;
+  user_id: string;
   device_info: string;
   ip_address: string;
   refresh_token: string;
   logged_in_at: Date;
   expires_at: Date;
   is_active: boolean;
-}): Promise<number> {
+}): Promise<string> {
   const id = generateUUID();
-  const [result]: any = await pool.query(
+  await pool.query(
     `INSERT INTO user_sessions 
-    (id,user_id, device_info, ip_address, refresh_token, logged_in_at, expires_at, is_active)
-    VALUES (?,?, ?, ?, ?, ?, ?, ?)`,
-    [id,data.user_id, data.device_info, data.ip_address, data.refresh_token, data.logged_in_at, data.expires_at, data.is_active ? 1 : 0]
+    (id, user_id, device_info, ip_address, refresh_token, logged_in_at, expires_at, is_active)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, data.user_id, data.device_info, data.ip_address, data.refresh_token, data.logged_in_at, data.expires_at, data.is_active ? 1 : 0]
   );
-  return result.insertId;
+  return id;
 }
 
 
@@ -118,7 +118,7 @@ export async function getAllUsers(): Promise<User[]> {
 }
 
 
-export async function getUserByIdFull(id: number): Promise<User | null> {
+export async function getUserByIdFull(id: string): Promise<User | null> {
   const [rows]: any = await pool.query(
     "SELECT id, name, email, role, profile_image, is_active, created_at, updated_at FROM users WHERE id = ?",
     [id]
@@ -127,7 +127,7 @@ export async function getUserByIdFull(id: number): Promise<User | null> {
 }
 
 
-export async function getCurrentUser(id: number): Promise<User | null> {
+export async function getCurrentUser(id: string): Promise<User | null> {
   return getUserByIdFull(id);
 }
 
@@ -150,7 +150,7 @@ export async function getUserSessions(userId: string): Promise<UserSession[]> {
   }));
 }
 
-export async function deleteUserById(userId: number): Promise<void> {
+export async function deleteUserById(userId: string): Promise<void> {
   await pool.query("DELETE FROM users WHERE id = ?", [userId]);
 }
 

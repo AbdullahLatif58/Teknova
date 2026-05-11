@@ -1,13 +1,30 @@
 import { useState } from 'react';
 import { useTheme } from '../../context/ThemeContext';
-import { Send } from 'lucide-react';
+import { Send, Loader2 } from 'lucide-react';
+import { subscribeNewsletter } from '../../api/subscriptions';
 
 export default function Newsletter1() {
   const { variation } = useTheme();
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => { e.preventDefault(); if (email) setSubscribed(true); };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!email) return;
+    
+    try {
+      setLoading(true);
+      const res = await subscribeNewsletter(email);
+      if (res.success) {
+        setSubscribed(true);
+      }
+    } catch (err) {
+      console.error("Subscription failed", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (subscribed) return (
     <section className="py-20 bg-primary">
@@ -26,8 +43,9 @@ export default function Newsletter1() {
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
           <input value={email} onChange={e => setEmail(e.target.value)} type="email" required placeholder="your@email.com"
             className="flex-1 bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground outline-none focus:border-neon transition-colors" />
-          <button type="submit" className="bg-gradient-neon text-teknova-dark px-6 py-3 rounded-lg font-bold tracking-wide glow-neon flex items-center justify-center gap-2">
-            <Send size={16} /> Subscribe
+          <button type="submit" disabled={loading} className="bg-gradient-neon text-teknova-dark px-6 py-3 rounded-lg font-bold tracking-wide glow-neon flex items-center justify-center gap-2">
+            {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />} 
+            {loading ? 'Subscribing...' : 'Subscribe'}
           </button>
         </form>
       </div>
@@ -42,8 +60,8 @@ export default function Newsletter1() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <input value={email} onChange={e => setEmail(e.target.value)} type="email" required placeholder="Enter your email"
             className="w-full bg-transparent border-b border-border px-0 py-3 text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors text-center font-heading" />
-          <button type="submit" className="text-foreground font-heading border-b-2 border-primary pb-1 hover:gap-4 transition-all inline-flex items-center gap-2">
-            Subscribe <Send size={16} />
+          <button type="submit" disabled={loading} className="text-foreground font-heading border-b-2 border-primary pb-1 hover:gap-4 transition-all inline-flex items-center gap-2">
+            {loading ? 'Subscribing' : 'Subscribe'} {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
           </button>
         </form>
       </div>
@@ -58,8 +76,9 @@ export default function Newsletter1() {
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
           <input value={email} onChange={e => setEmail(e.target.value)} type="email" required placeholder="your@email.com"
             className="flex-1 bg-primary-foreground/10 border border-primary-foreground/20 rounded-full px-6 py-3 text-primary-foreground placeholder:text-primary-foreground/60 outline-none" />
-          <button type="submit" className="bg-primary-foreground text-primary px-6 py-3 rounded-full font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
-            <Send size={16} /> Subscribe
+          <button type="submit" disabled={loading} className="bg-primary-foreground text-primary px-6 py-3 rounded-full font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+            {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />} 
+            {loading ? 'Subscribing...' : 'Subscribe'}
           </button>
         </form>
       </div>

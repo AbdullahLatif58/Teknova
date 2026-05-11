@@ -28,4 +28,5 @@ export const env = {
     PORT: Number(process.env.REDIS_PORT),
     PASSWORD: process.env.REDIS_PASSWORD,
   },
+  RAPIDAPI_KEY: process.env.RAPIDAPI_KEY,
 };
