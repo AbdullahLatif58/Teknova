@@ -88,9 +88,14 @@ export default function DashboardPage() {
                 <XAxis dataKey="name" stroke="#52525b" fontSize={11} tickLine={false} axisLine={false} />
                 <YAxis stroke="#52525b" fontSize={11} tickLine={false} axisLine={false} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: 'var(--tw-card-bg, #ffffff)', borderColor: 'var(--tw-border-color, #e4e4e7)', borderRadius: '8px', fontSize: '12px' }}
+                  contentStyle={{ 
+                    backgroundColor: 'rgb(var(--card))', 
+                    borderColor: 'rgb(var(--border))', 
+                    borderRadius: '8px', 
+                    fontSize: '12px',
+                    color: 'currentColor'
+                  }}
                   itemStyle={{ color: 'currentColor' }}
-                  className="dark:!bg-[#111118] dark:!border-[#1e1e2e]"
                 />
                 <Area type="monotone" dataKey="revenue" stroke="#7c3aed" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
               </AreaChart>

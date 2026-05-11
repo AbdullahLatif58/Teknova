@@ -97,7 +97,7 @@ export default function OrdersPage() {
               {loading ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-10 text-center">
-                    <Loader2 className="animate-spin text-sky-500 mx-auto" size={24} />
+                    <Loader2 className="animate-spin text-violet-600 mx-auto" size={24} />
                     <p className="text-xs text-zinc-500 mt-3 font-medium uppercase tracking-widest">Fetching Ledgers...</p>
                   </td>
                 </tr>

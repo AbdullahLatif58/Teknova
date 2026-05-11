@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, ArrowRight, Edit3, Trash2 } from 'lucide-react';
+import { Plus, ArrowRight, Edit3, Trash2, LayoutGrid } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
